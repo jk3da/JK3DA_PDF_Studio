@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { IPC, type OpenedPdf, type SavedPdf } from '../shared/types'
+import { IPC, type OpenedPdf, type SavedPdf, type SavedBatch, type BatchFile } from '../shared/types'
 
 /**
  * Sichere, minimale API für den Renderer. Kein direkter Node-/IPC-Zugriff;
@@ -11,6 +11,9 @@ const api = {
   /** Öffnet "Speichern unter" und schreibt die Bytes auf die Platte. */
   savePdf: (bytes: Uint8Array, defaultName?: string): Promise<SavedPdf | null> =>
     ipcRenderer.invoke(IPC.savePdf, { bytes, defaultName }),
+  /** Wählt einen Zielordner und schreibt mehrere PDFs (z. B. Aufteilen). */
+  savePdfBatch: (files: BatchFile[]): Promise<SavedBatch | null> =>
+    ipcRenderer.invoke(IPC.savePdfBatch, { files }),
   /** Healthcheck-Roundtrip Renderer -> Main -> Renderer. */
   ping: (): Promise<string> => ipcRenderer.invoke(IPC.ping),
   /** App-Version aus dem Main-Prozess. */

@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
-import type { PDFDocumentProxy } from 'pdfjs-dist'
 import PdfPage from './PdfPage'
 import { usePdfStore } from '../../lib/state/store'
 
@@ -10,33 +9,34 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
 export default function PdfCanvas(): JSX.Element {
   const bytes = usePdfStore((s) => s.bytes)
   const zoom = usePdfStore((s) => s.zoom)
+  const doc = usePdfStore((s) => s.doc)
+  const setDoc = usePdfStore((s) => s.setDoc)
   const setNumPages = usePdfStore((s) => s.setNumPages)
   const setStatus = usePdfStore((s) => s.setStatus)
   const setCurrentPage = usePdfStore((s) => s.setCurrentPage)
 
-  const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null)
-  const docRef = useRef<PDFDocumentProxy | null>(null)
+  const docRef = useRef<typeof doc>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!bytes) {
-      setPdf(null)
+      setDoc(null)
       return
     }
     let cancelled = false
     setStatus('Lade Dokument …')
     const task = pdfjsLib.getDocument({ data: bytes.slice(0) })
     task.promise
-      .then((doc) => {
+      .then((loaded) => {
         if (cancelled) {
-          void doc.destroy()
+          void loaded.destroy()
           return
         }
         docRef.current?.destroy()
-        docRef.current = doc
-        setPdf(doc)
-        setNumPages(doc.numPages)
-        setStatus(`Bereit · ${doc.numPages} Seite(n)`)
+        docRef.current = loaded
+        setDoc(loaded)
+        setNumPages(loaded.numPages)
+        setStatus(`Bereit · ${loaded.numPages} Seite(n)`)
       })
       .catch((e: unknown) => {
         if (!cancelled) setStatus(`Fehler: ${e instanceof Error ? e.message : String(e)}`)
@@ -45,7 +45,7 @@ export default function PdfCanvas(): JSX.Element {
       cancelled = true
       void task.destroy()
     }
-  }, [bytes, setNumPages, setStatus])
+  }, [bytes, setDoc, setNumPages, setStatus])
 
   useEffect(() => {
     return () => {
@@ -69,13 +69,13 @@ export default function PdfCanvas(): JSX.Element {
     }
     el.addEventListener('scroll', onScroll, { passive: true })
     return () => el.removeEventListener('scroll', onScroll)
-  }, [setCurrentPage, pdf])
+  }, [setCurrentPage, doc])
 
   return (
     <div ref={containerRef} className="h-full w-full overflow-auto bg-canvas py-2" data-testid="pdf-scroll">
-      {pdf &&
-        Array.from({ length: pdf.numPages }, (_, i) => i + 1).map((n) => (
-          <PdfPage key={`p${n}-of${pdf.numPages}`} pdf={pdf} pageNumber={n} zoom={zoom} />
+      {doc &&
+        Array.from({ length: doc.numPages }, (_, i) => i + 1).map((n) => (
+          <PdfPage key={`p${n}-of${doc.numPages}`} pdf={doc} pageNumber={n} zoom={zoom} />
         ))}
     </div>
   )

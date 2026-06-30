@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import { join, basename } from 'node:path'
 import { readFile, writeFile } from 'node:fs/promises'
-import { IPC, type OpenedPdf, type SavedPdf } from '../shared/types'
+import { IPC, type OpenedPdf, type SavedPdf, type SavedBatch, type BatchFile } from '../shared/types'
 
 const isDev = !!process.env['ELECTRON_RENDERER_URL']
 
@@ -73,6 +73,23 @@ function registerIpc(): void {
       if (canceled || !filePath) return null
       await writeFile(filePath, Buffer.from(payload.bytes))
       return { path: filePath, name: basename(filePath) }
+    }
+  )
+
+  // Batch-Export (z. B. Aufteilen in Einzelseiten): Zielordner wählen, alle schreiben.
+  ipcMain.handle(
+    IPC.savePdfBatch,
+    async (_e, payload: { files: BatchFile[] }): Promise<SavedBatch | null> => {
+      const { canceled, filePaths } = await dialog.showOpenDialog({
+        title: 'Zielordner wählen',
+        properties: ['openDirectory', 'createDirectory']
+      })
+      if (canceled || filePaths.length === 0) return null
+      const dir = filePaths[0]
+      for (const f of payload.files) {
+        await writeFile(join(dir, f.name), Buffer.from(f.bytes))
+      }
+      return { dir, count: payload.files.length }
     }
   )
 }

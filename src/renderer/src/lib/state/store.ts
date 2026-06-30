@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { PDFDocumentProxy } from 'pdfjs-dist'
 import type { Annotation } from '../annotations/types'
 
 export type ToolId =
@@ -22,6 +23,8 @@ interface PdfState {
   bytes: Uint8Array | null
   name: string | null
   path: string | null
+  /** Geladenes pdf.js-Dokument (von PdfCanvas gesetzt, von Sidebar geteilt). */
+  doc: PDFDocumentProxy | null
   numPages: number
   currentPage: number
   zoom: number
@@ -38,6 +41,7 @@ interface PdfState {
   setDocument: (bytes: Uint8Array, name: string, path?: string | null) => void
   replaceBytes: (bytes: Uint8Array, name?: string, path?: string | null) => void
   closeDocument: () => void
+  setDoc: (doc: PDFDocumentProxy | null) => void
   setNumPages: (n: number) => void
   setCurrentPage: (n: number) => void
   setZoom: (z: number) => void
@@ -63,6 +67,7 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   bytes: null,
   name: null,
   path: null,
+  doc: null,
   numPages: 0,
   currentPage: 1,
   zoom: 1,
@@ -81,6 +86,7 @@ export const usePdfStore = create<PdfState>((set, get) => ({
       bytes,
       name,
       path,
+      doc: null,
       numPages: 0,
       currentPage: 1,
       annotations: [],
@@ -95,6 +101,7 @@ export const usePdfStore = create<PdfState>((set, get) => ({
       bytes,
       name: name ?? s.name,
       path: path !== undefined ? path : s.path,
+      doc: null,
       annotations: [],
       selectedId: null,
       past: [],
@@ -106,6 +113,7 @@ export const usePdfStore = create<PdfState>((set, get) => ({
       bytes: null,
       name: null,
       path: null,
+      doc: null,
       numPages: 0,
       currentPage: 1,
       annotations: [],
@@ -115,6 +123,7 @@ export const usePdfStore = create<PdfState>((set, get) => ({
       status: 'Bereit',
       dirty: false
     }),
+  setDoc: (doc) => set({ doc }),
   setNumPages: (n) => set({ numPages: n }),
   setCurrentPage: (n) => set({ currentPage: n }),
   setZoom: (z) => set({ zoom: clampZoom(z) }),
