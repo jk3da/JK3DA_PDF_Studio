@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import { join, basename } from 'node:path'
-import { readFile } from 'node:fs/promises'
-import { IPC, type OpenedPdf } from '../shared/types'
+import { readFile, writeFile } from 'node:fs/promises'
+import { IPC, type OpenedPdf, type SavedPdf } from '../shared/types'
 
 const isDev = !!process.env['ELECTRON_RENDERER_URL']
 
@@ -59,6 +59,22 @@ function registerIpc(): void {
       bytes: new Uint8Array(data)
     }
   })
+
+  // "Speichern unter": schreibt die Bytes nie über das Original, sondern fragt
+  // immer einen Zielpfad ab (verlustfreies Arbeitsprinzip).
+  ipcMain.handle(
+    IPC.savePdf,
+    async (_e, payload: { bytes: Uint8Array; defaultName?: string }): Promise<SavedPdf | null> => {
+      const { canceled, filePath } = await dialog.showSaveDialog({
+        title: 'Speichern unter',
+        defaultPath: payload.defaultName ?? 'dokument.pdf',
+        filters: [{ name: 'PDF-Dokumente', extensions: ['pdf'] }]
+      })
+      if (canceled || !filePath) return null
+      await writeFile(filePath, Buffer.from(payload.bytes))
+      return { path: filePath, name: basename(filePath) }
+    }
+  )
 }
 
 app.whenReady().then(() => {

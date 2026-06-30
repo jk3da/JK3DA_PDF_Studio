@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { IPC, type OpenedPdf } from '../shared/types'
+import { IPC, type OpenedPdf, type SavedPdf } from '../shared/types'
 
 /**
  * Sichere, minimale API für den Renderer. Kein direkter Node-/IPC-Zugriff;
@@ -8,6 +8,9 @@ import { IPC, type OpenedPdf } from '../shared/types'
 const api = {
   /** Öffnet den nativen "PDF öffnen"-Dialog im Main-Prozess. */
   openPdf: (): Promise<OpenedPdf | null> => ipcRenderer.invoke(IPC.openPdf),
+  /** Öffnet "Speichern unter" und schreibt die Bytes auf die Platte. */
+  savePdf: (bytes: Uint8Array, defaultName?: string): Promise<SavedPdf | null> =>
+    ipcRenderer.invoke(IPC.savePdf, { bytes, defaultName }),
   /** Healthcheck-Roundtrip Renderer -> Main -> Renderer. */
   ping: (): Promise<string> => ipcRenderer.invoke(IPC.ping),
   /** App-Version aus dem Main-Prozess. */

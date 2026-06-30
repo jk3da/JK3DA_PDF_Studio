@@ -1,108 +1,82 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as pdfjsLib from 'pdfjs-dist'
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import type { PDFDocumentProxy } from 'pdfjs-dist'
+import PdfPage from './PdfPage'
 import { usePdfStore } from '../../lib/state/store'
 
-// pdf.js braucht seinen Worker. Vite liefert die Datei als Asset-URL (?url).
 pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
 
 export default function PdfCanvas(): JSX.Element {
-  const containerRef = useRef<HTMLDivElement>(null)
-
   const bytes = usePdfStore((s) => s.bytes)
   const zoom = usePdfStore((s) => s.zoom)
   const setNumPages = usePdfStore((s) => s.setNumPages)
   const setStatus = usePdfStore((s) => s.setStatus)
   const setCurrentPage = usePdfStore((s) => s.setCurrentPage)
 
+  const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null)
+  const docRef = useRef<PDFDocumentProxy | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
-    const container = containerRef.current
-    if (!container || !bytes) return
-
-    let cancelled = false
-    // pdf.js detacht den uebergebenen Buffer — daher eine Kopie reingeben,
-    // damit die Bytes im Store fuer spaeteres Speichern erhalten bleiben.
-    const loadingTask = pdfjsLib.getDocument({ data: bytes.slice(0) })
-
-    const render = async (): Promise<void> => {
-      setStatus('Lade Dokument …')
-      const pdf = await loadingTask.promise
-      if (cancelled) return
-
-      setNumPages(pdf.numPages)
-      container.replaceChildren()
-      const dpr = window.devicePixelRatio || 1
-
-      for (let pageNo = 1; pageNo <= pdf.numPages; pageNo++) {
-        if (cancelled) return
-        const page = await pdf.getPage(pageNo)
-        const viewport = page.getViewport({ scale: zoom })
-
-        const canvas = document.createElement('canvas')
-        canvas.className = 'pdf-page'
-        canvas.id = `pdf-page-${pageNo}`
-        canvas.dataset.page = String(pageNo)
-        // CSS-Groesse = logische Punkte; Backing-Store = * dpr fuer scharfes Rendern.
-        canvas.style.width = `${Math.floor(viewport.width)}px`
-        canvas.style.height = `${Math.floor(viewport.height)}px`
-        canvas.width = Math.floor(viewport.width * dpr)
-        canvas.height = Math.floor(viewport.height * dpr)
-
-        const ctx = canvas.getContext('2d')
-        if (!ctx) continue
-        container.appendChild(canvas)
-
-        await page.render({
-          canvasContext: ctx,
-          viewport,
-          transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : undefined
-        }).promise
-      }
-
-      if (!cancelled) setStatus(`Bereit · ${pdf.numPages} Seite(n)`)
+    if (!bytes) {
+      setPdf(null)
+      return
     }
-
-    render().catch((err: unknown) => {
-      if (cancelled) return
-      const msg = err instanceof Error ? err.message : String(err)
-      setStatus(`Fehler beim Rendern: ${msg}`)
-    })
-
+    let cancelled = false
+    setStatus('Lade Dokument …')
+    const task = pdfjsLib.getDocument({ data: bytes.slice(0) })
+    task.promise
+      .then((doc) => {
+        if (cancelled) {
+          void doc.destroy()
+          return
+        }
+        docRef.current?.destroy()
+        docRef.current = doc
+        setPdf(doc)
+        setNumPages(doc.numPages)
+        setStatus(`Bereit · ${doc.numPages} Seite(n)`)
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setStatus(`Fehler: ${e instanceof Error ? e.message : String(e)}`)
+      })
     return () => {
       cancelled = true
-      loadingTask.destroy()
+      void task.destroy()
     }
-  }, [bytes, zoom, setNumPages, setStatus])
+  }, [bytes, setNumPages, setStatus])
 
-  // Aktive Seite anhand der Scroll-Position der Sidebar-Synchronisierung melden.
   useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
+    return () => {
+      docRef.current?.destroy()
+      docRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
     const onScroll = (): void => {
-      const mid = container.scrollTop + container.clientHeight / 2
-      const pages = container.querySelectorAll<HTMLCanvasElement>('canvas[data-page]')
-      for (const c of pages) {
-        if (c.offsetTop <= mid && c.offsetTop + c.offsetHeight >= mid) {
-          setCurrentPage(Number(c.dataset.page))
+      const mid = el.scrollTop + el.clientHeight / 2
+      const pages = el.querySelectorAll<HTMLElement>('[data-page]')
+      for (const p of pages) {
+        if (p.offsetTop <= mid && p.offsetTop + p.offsetHeight >= mid) {
+          setCurrentPage(Number(p.dataset.page))
           break
         }
       }
     }
-    container.addEventListener('scroll', onScroll, { passive: true })
-    return () => container.removeEventListener('scroll', onScroll)
-  }, [setCurrentPage])
+    el.addEventListener('scroll', onScroll, { passive: true })
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [setCurrentPage, pdf])
 
   return (
-    <div
-      ref={containerRef}
-      className="relative h-full w-full overflow-auto bg-canvas"
-      data-testid="pdf-scroll"
-    >
-      {!bytes && (
-        <div className="flex h-full w-full items-center justify-center text-chrome-500">
-          Kein Dokument geöffnet.
-        </div>
-      )}
+    <div ref={containerRef} className="h-full w-full overflow-auto bg-canvas py-2" data-testid="pdf-scroll">
+      {pdf &&
+        Array.from({ length: pdf.numPages }, (_, i) => i + 1).map((n) => (
+          <PdfPage key={`p${n}-of${pdf.numPages}`} pdf={pdf} pageNumber={n} zoom={zoom} />
+        ))}
     </div>
   )
 }

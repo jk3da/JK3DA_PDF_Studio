@@ -10,9 +10,16 @@ export interface OpenedPdf {
   bytes: Uint8Array
 }
 
+/** Ergebnis eines "Speichern unter"-Dialogs. */
+export interface SavedPdf {
+  path: string
+  name: string
+}
+
 /** IPC-Kanalnamen zentral, damit Main und Preload sich nicht vertippen. */
 export const IPC = {
   openPdf: 'dialog:openPdf',
+  savePdf: 'dialog:savePdf',
   ping: 'app:ping',
   getVersion: 'app:getVersion'
 } as const

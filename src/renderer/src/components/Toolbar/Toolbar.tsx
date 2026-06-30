@@ -3,8 +3,11 @@ import {
   Save,
   ZoomIn,
   ZoomOut,
+  Undo2,
+  Redo2,
   MousePointer2,
   Type,
+  Pencil,
   Highlighter,
   Square,
   StickyNote,
@@ -13,6 +16,7 @@ import {
   type LucideIcon
 } from 'lucide-react'
 import { usePdfStore, type ToolId } from '../../lib/state/store'
+import { saveCurrentDocument } from '../../lib/pdf/save'
 
 interface ToolDef {
   id: ToolId
@@ -23,6 +27,7 @@ interface ToolDef {
 const TOOLS: ToolDef[] = [
   { id: 'select', label: 'Auswählen', icon: MousePointer2 },
   { id: 'text', label: 'Text', icon: Type },
+  { id: 'draw', label: 'Freihand', icon: Pencil },
   { id: 'highlight', label: 'Markieren', icon: Highlighter },
   { id: 'rectangle', label: 'Rechteck', icon: Square },
   { id: 'note', label: 'Notiz', icon: StickyNote },
@@ -30,11 +35,9 @@ const TOOLS: ToolDef[] = [
   { id: 'stamp', label: 'Stempel', icon: Stamp }
 ]
 
-interface ToolbarProps {
-  onOpen: () => void
-}
+const SWATCHES = ['#e11d2a', '#1d6fe1', '#15a34a', '#f59e0b', '#0a0a0a']
 
-export default function Toolbar({ onOpen }: ToolbarProps): JSX.Element {
+export default function Toolbar({ onOpen }: { onOpen: () => void }): JSX.Element {
   const tool = usePdfStore((s) => s.tool)
   const setTool = usePdfStore((s) => s.setTool)
   const zoom = usePdfStore((s) => s.zoom)
@@ -42,6 +45,13 @@ export default function Toolbar({ onOpen }: ToolbarProps): JSX.Element {
   const zoomOut = usePdfStore((s) => s.zoomOut)
   const resetZoom = usePdfStore((s) => s.resetZoom)
   const hasDoc = usePdfStore((s) => s.bytes !== null)
+  const currentColor = usePdfStore((s) => s.currentColor)
+  const setCurrentColor = usePdfStore((s) => s.setCurrentColor)
+  const undo = usePdfStore((s) => s.undo)
+  const redo = usePdfStore((s) => s.redo)
+  const canUndo = usePdfStore((s) => s.past.length > 0)
+  const canRedo = usePdfStore((s) => s.future.length > 0)
+  const dirty = usePdfStore((s) => s.dirty)
 
   return (
     <div className="flex h-12 shrink-0 items-center gap-1 border-b border-chrome-700 bg-chrome-800 px-2 text-chrome-100">
@@ -57,15 +67,37 @@ export default function Toolbar({ onOpen }: ToolbarProps): JSX.Element {
 
       <button
         type="button"
+        onClick={() => void saveCurrentDocument()}
         disabled={!hasDoc}
         className="flex h-9 items-center gap-2 rounded px-3 text-sm text-gray-200 hover:bg-chrome-700 disabled:cursor-not-allowed disabled:opacity-40"
-        title="Speichern unter … (Phase 1)"
+        title="Speichern unter … (Ctrl+S)"
       >
         <Save size={18} />
-        <span>Speichern</span>
+        <span>Speichern{dirty ? ' *' : ''}</span>
       </button>
 
-      <div className="mx-2 h-6 w-px bg-chrome-600" />
+      <div className="mx-1 h-6 w-px bg-chrome-600" />
+
+      <button
+        type="button"
+        onClick={undo}
+        disabled={!canUndo}
+        title="Rückgängig (Ctrl+Z)"
+        className="flex h-9 w-9 items-center justify-center rounded text-gray-200 hover:bg-chrome-700 disabled:opacity-40"
+      >
+        <Undo2 size={18} />
+      </button>
+      <button
+        type="button"
+        onClick={redo}
+        disabled={!canRedo}
+        title="Wiederholen (Ctrl+Y)"
+        className="flex h-9 w-9 items-center justify-center rounded text-gray-200 hover:bg-chrome-700 disabled:opacity-40"
+      >
+        <Redo2 size={18} />
+      </button>
+
+      <div className="mx-1 h-6 w-px bg-chrome-600" />
 
       <div className="flex items-center gap-0.5">
         {TOOLS.map(({ id, label, icon: Icon }) => {
@@ -87,6 +119,25 @@ export default function Toolbar({ onOpen }: ToolbarProps): JSX.Element {
             </button>
           )
         })}
+      </div>
+
+      <div className="mx-1 h-6 w-px bg-chrome-600" />
+
+      <div className="flex items-center gap-1">
+        {SWATCHES.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => setCurrentColor(c)}
+            disabled={!hasDoc}
+            title={`Farbe ${c}`}
+            className={[
+              'h-5 w-5 rounded-full border disabled:opacity-40',
+              currentColor === c ? 'border-white ring-2 ring-accent' : 'border-chrome-600'
+            ].join(' ')}
+            style={{ background: c }}
+          />
+        ))}
       </div>
 
       <div className="ml-auto flex items-center gap-0.5">

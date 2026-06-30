@@ -5,6 +5,7 @@ import PdfCanvas from './components/PdfCanvas/PdfCanvas'
 import StatusBar from './components/StatusBar/StatusBar'
 import { usePdfStore } from './lib/state/store'
 import { createWelcomePdf } from './lib/pdf/sample'
+import { saveCurrentDocument } from './lib/pdf/save'
 
 export default function App(): JSX.Element {
   const setDocument = usePdfStore((s) => s.setDocument)
@@ -36,12 +37,35 @@ export default function App(): JSX.Element {
     }
   }, [setDocument, setStatus])
 
-  // Ctrl+O öffnet eine Datei.
+  // Globale Tastenkürzel.
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
+      const ctrl = e.ctrlKey || e.metaKey
+      const el = document.activeElement
+      const typing = el instanceof HTMLTextAreaElement || el instanceof HTMLInputElement
+      const store = usePdfStore.getState()
+
+      if (ctrl && e.key.toLowerCase() === 'o') {
         e.preventDefault()
         void handleOpen()
+      } else if (ctrl && e.key.toLowerCase() === 's') {
+        e.preventDefault()
+        void saveCurrentDocument()
+      } else if (ctrl && e.key.toLowerCase() === 'z' && !e.shiftKey) {
+        if (!typing) {
+          e.preventDefault()
+          store.undo()
+        }
+      } else if (ctrl && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) {
+        if (!typing) {
+          e.preventDefault()
+          store.redo()
+        }
+      } else if ((e.key === 'Delete' || e.key === 'Backspace') && !typing && store.selectedId) {
+        e.preventDefault()
+        store.removeAnnotation(store.selectedId)
+      } else if (e.key === 'Escape') {
+        store.selectAnnotation(null)
       }
     }
     window.addEventListener('keydown', onKey)

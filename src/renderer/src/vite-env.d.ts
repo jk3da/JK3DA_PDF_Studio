@@ -1,2 +1,2 @@
 /// <reference types="vite/client" />
-/// <reference types="../../preload/index.d.ts" />
+/// <reference path="../../preload/index.d.ts" />
