@@ -1,0 +1,3 @@
+# Platzhalter. Hier kommen die nativen Windows-Sidecars hinein:
+#   qpdf.exe, gswin64c.exe, tesseract.exe (+ tessdata), soffice.exe, mutool.exe, magick.exe
+# Siehe HANDOVER.md §4. In Phase 0 noch leer.

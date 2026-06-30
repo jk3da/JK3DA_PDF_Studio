@@ -1,0 +1,33 @@
+appId: com.jk3da.pdfstudio
+productName: JK3DA PDF Studio
+copyright: Private, offline use only
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - out/**/*
+  - package.json
+
+# Native Sidecars (qpdf, ghostscript, tesseract, ...) liegen in resources/bin
+# und werden unverändert ins Paket kopiert. Aktuell leer (Phase 0).
+extraResources:
+  - from: resources/bin
+    to: bin
+    filter:
+      - '**/*'
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+    - target: portable
+      arch: [x64]
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false

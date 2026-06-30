@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!--
+      Offline-first CSP. 'unsafe-eval'/ws: werden nur vom Vite-Dev-Server (HMR) gebraucht
+      und sollten fuer Produktions-Haertung spaeter via Main-Prozess-Header entfernt werden.
+      Kein remote Code: default-src 'self' verbietet jeglichen Netzwerk-Origin.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; worker-src 'self' blob:; connect-src 'self' ws:;"
+    />
+    <title>JK3DA PDF Studio</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./src/main.tsx"></script>
+  </body>
+</html>

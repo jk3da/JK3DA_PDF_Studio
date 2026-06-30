@@ -1,0 +1,24 @@
+import { contextBridge, ipcRenderer } from 'electron'
+import { IPC, type OpenedPdf } from '../shared/types'
+
+/**
+ * Sichere, minimale API für den Renderer. Kein direkter Node-/IPC-Zugriff;
+ * alles läuft über diese whitelist-artige Brücke (contextIsolation: true).
+ */
+const api = {
+  /** Öffnet den nativen "PDF öffnen"-Dialog im Main-Prozess. */
+  openPdf: (): Promise<OpenedPdf | null> => ipcRenderer.invoke(IPC.openPdf),
+  /** Healthcheck-Roundtrip Renderer -> Main -> Renderer. */
+  ping: (): Promise<string> => ipcRenderer.invoke(IPC.ping),
+  /** App-Version aus dem Main-Prozess. */
+  getVersion: (): Promise<string> => ipcRenderer.invoke(IPC.getVersion)
+}
+
+export type Jk3daApi = typeof api
+
+if (process.contextIsolated) {
+  contextBridge.exposeInMainWorld('jk3da', api)
+} else {
+  // Fallback (sollte bei contextIsolation: true nie eintreten).
+  ;(globalThis as unknown as { jk3da: Jk3daApi }).jk3da = api
+}
