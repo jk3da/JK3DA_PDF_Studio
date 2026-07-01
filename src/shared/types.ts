@@ -50,6 +50,14 @@ export interface EncryptRequest {
 
 export type EncryptResult = { ok: true; bytes: Uint8Array } | { ok: false; error: string }
 
+export type CompressResult = { ok: true; bytes: Uint8Array } | { ok: false; error: string }
+export type OfficeResult = { ok: true; bytes: Uint8Array; name: string } | { ok: false; error: string }
+export interface OcrRequest {
+  images: { bytes: Uint8Array }[]
+  lang: string
+}
+export type OcrResult = { ok: true; pages: Uint8Array[] } | { ok: false; error: string }
+
 /** IPC-Kanalnamen zentral, damit Main und Preload sich nicht vertippen. */
 export const IPC = {
   openPdf: 'dialog:openPdf',
@@ -58,6 +66,9 @@ export const IPC = {
   savePdfBatch: 'dialog:savePdfBatch',
   toolAvailable: 'sidecar:toolAvailable',
   encryptPdf: 'sidecar:encryptPdf',
+  compressPdf: 'sidecar:compressPdf',
+  convertOfficeToPdf: 'sidecar:convertOfficeToPdf',
+  ocrImages: 'sidecar:ocrImages',
   winMinimize: 'win:minimize',
   winMaximizeToggle: 'win:maximizeToggle',
   winClose: 'win:close',

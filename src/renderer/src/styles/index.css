@@ -70,6 +70,19 @@ body {
   background-clip: content-box;
 }
 
+/* Text-Layer (Markieren/Kopieren) darf trotz globalem user-select:none selektierbar sein */
+.textLayer {
+  position: absolute;
+  inset: 0;
+  overflow: clip;
+  z-index: 2;
+}
+.textLayer,
+.textLayer * {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* Eine gerenderte PDF-Seite */
 .pdf-page {
   display: block;

@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import { join, basename } from 'node:path'
-import { readFile, writeFile, rm } from 'node:fs/promises'
+import { readFile, writeFile, rm, mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import {
@@ -11,7 +11,11 @@ import {
   type BatchFile,
   type EncryptRequest,
   type EncryptResult,
-  type ImageInput
+  type ImageInput,
+  type CompressResult,
+  type OfficeResult,
+  type OcrRequest,
+  type OcrResult
 } from '../shared/types'
 import { toolAvailable, runBinary } from './sidecars'
 
@@ -174,6 +178,86 @@ function registerIpc(): void {
     } finally {
       await rm(inPath, { force: true }).catch(() => undefined)
       await rm(outPath, { force: true }).catch(() => undefined)
+    }
+  })
+
+  // Komprimieren via Ghostscript.
+  ipcMain.handle(
+    IPC.compressPdf,
+    async (_e, payload: { bytes: Uint8Array; quality: string }): Promise<CompressResult> => {
+      if (!toolAvailable('gswin64c')) return { ok: false, error: 'gswin64c-missing' }
+      const stamp = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`
+      const inPath = join(tmpdir(), `jk3da-gs-in-${stamp}.pdf`)
+      const outPath = join(tmpdir(), `jk3da-gs-out-${stamp}.pdf`)
+      try {
+        await writeFile(inPath, Buffer.from(payload.bytes))
+        const res = await runBinary('gswin64c', [
+          '-sDEVICE=pdfwrite',
+          '-dCompatibilityLevel=1.4',
+          `-dPDFSETTINGS=/${payload.quality}`,
+          '-dNOPAUSE',
+          '-dBATCH',
+          '-dQUIET',
+          `-sOutputFile=${outPath}`,
+          inPath
+        ])
+        if (!existsSync(outPath)) return { ok: false, error: res.stderr || `gs exit ${res.code}` }
+        return { ok: true, bytes: new Uint8Array(await readFile(outPath)) }
+      } catch (e) {
+        return { ok: false, error: e instanceof Error ? e.message : String(e) }
+      } finally {
+        await rm(inPath, { force: true }).catch(() => undefined)
+        await rm(outPath, { force: true }).catch(() => undefined)
+      }
+    }
+  )
+
+  // Office -> PDF via LibreOffice (soffice --headless).
+  ipcMain.handle(IPC.convertOfficeToPdf, async (): Promise<OfficeResult> => {
+    if (!toolAvailable('soffice')) return { ok: false, error: 'soffice-missing' }
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Office-Datei wählen',
+      properties: ['openFile'],
+      filters: [{ name: 'Office', extensions: ['docx', 'doc', 'odt', 'rtf', 'xlsx', 'xls', 'ods', 'pptx', 'ppt', 'odp'] }]
+    })
+    if (canceled || filePaths.length === 0) return { ok: false, error: 'canceled' }
+    const inPath = filePaths[0]
+    const outDir = join(tmpdir(), `jk3da-office-${Date.now()}-${Math.floor(Math.random() * 1e6)}`)
+    try {
+      await mkdir(outDir, { recursive: true })
+      const res = await runBinary('soffice', ['--headless', '--convert-to', 'pdf', '--outdir', outDir, inPath])
+      const outName = basename(inPath).replace(/\.[^.]+$/, '.pdf')
+      const outPath = join(outDir, outName)
+      if (!existsSync(outPath)) return { ok: false, error: res.stderr || 'Konvertierung fehlgeschlagen' }
+      return { ok: true, bytes: new Uint8Array(await readFile(outPath)), name: outName }
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) }
+    } finally {
+      await rm(outDir, { recursive: true, force: true }).catch(() => undefined)
+    }
+  })
+
+  // OCR: pro Bild eine durchsuchbare Ein-Seiten-PDF via Tesseract.
+  ipcMain.handle(IPC.ocrImages, async (_e, payload: OcrRequest): Promise<OcrResult> => {
+    if (!toolAvailable('tesseract')) return { ok: false, error: 'tesseract-missing' }
+    const dir = join(tmpdir(), `jk3da-ocr-${Date.now()}-${Math.floor(Math.random() * 1e6)}`)
+    try {
+      await mkdir(dir, { recursive: true })
+      const pages: Uint8Array[] = []
+      for (let i = 0; i < payload.images.length; i++) {
+        const inPath = join(dir, `p${i}.png`)
+        const outBase = join(dir, `p${i}`)
+        await writeFile(inPath, Buffer.from(payload.images[i].bytes))
+        const res = await runBinary('tesseract', [inPath, outBase, '-l', payload.lang || 'deu', 'pdf'])
+        const outPath = `${outBase}.pdf`
+        if (!existsSync(outPath)) return { ok: false, error: res.stderr || `tesseract exit ${res.code}` }
+        pages.push(new Uint8Array(await readFile(outPath)))
+      }
+      return { ok: true, pages }
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) }
+    } finally {
+      await rm(dir, { recursive: true, force: true }).catch(() => undefined)
     }
   })
 }

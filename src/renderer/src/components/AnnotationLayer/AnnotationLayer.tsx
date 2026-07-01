@@ -42,6 +42,7 @@ type Gesture =
 
 export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props): JSX.Element {
   const tool = usePdfStore((s) => s.tool)
+  const textSelect = usePdfStore((s) => s.textSelect)
   const color = usePdfStore((s) => s.currentColor)
   const strokeW = usePdfStore((s) => s.currentStrokeWidth)
   const opacity = usePdfStore((s) => s.currentOpacity)
@@ -228,7 +229,7 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
     <div
       ref={layerRef}
       className="absolute inset-0"
-      style={{ cursor, touchAction: 'none' }}
+      style={{ cursor, touchAction: 'none', pointerEvents: textSelect ? 'none' : undefined }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}

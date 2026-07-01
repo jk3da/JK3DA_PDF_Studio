@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
-import type { PDFDocumentProxy } from 'pdfjs-dist'
+import { TextLayer, type PDFDocumentProxy } from 'pdfjs-dist'
 import AnnotationLayer from '../AnnotationLayer/AnnotationLayer'
+import { usePdfStore } from '../../lib/state/store'
 
 interface Props {
   pdf: PDFDocumentProxy
@@ -15,8 +16,11 @@ interface CancelableRender {
 
 export default function PdfPage({ pdf, pageNumber, zoom }: Props): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const textRef = useRef<HTMLDivElement>(null)
   const renderRef = useRef<CancelableRender | null>(null)
+  const textLayerRef = useRef<TextLayer | null>(null)
   const [base, setBase] = useState<{ w: number; h: number } | null>(null)
+  const textSelect = usePdfStore((s) => s.textSelect)
 
   useEffect(() => {
     let cancelled = false
@@ -46,12 +50,33 @@ export default function PdfPage({ pdf, pageNumber, zoom }: Props): JSX.Element {
       try {
         await task.promise
       } catch {
-        /* RenderingCancelledException beim Zoom/Unmount — ignorieren */
+        return
+      }
+
+      // Textauswahl-Ebene (für Markieren/Kopieren)
+      const container = textRef.current
+      if (container && !cancelled) {
+        try {
+          textLayerRef.current?.cancel()
+          container.replaceChildren()
+          container.style.setProperty('--scale-factor', String(zoom))
+          container.style.setProperty('--total-scale-factor', String(zoom))
+          const tl = new TextLayer({
+            textContentSource: await page.getTextContent(),
+            container,
+            viewport
+          })
+          textLayerRef.current = tl
+          await tl.render()
+        } catch {
+          /* Text-Layer ist optional — Fehler ignorieren */
+        }
       }
     })()
     return () => {
       cancelled = true
       renderRef.current?.cancel()
+      textLayerRef.current?.cancel()
     }
   }, [pdf, pageNumber, zoom])
 
@@ -66,6 +91,11 @@ export default function PdfPage({ pdf, pageNumber, zoom }: Props): JSX.Element {
       style={{ width: wPx, height: hPx }}
     >
       <canvas ref={canvasRef} className="block" style={{ width: wPx, height: hPx }} />
+      <div
+        ref={textRef}
+        className="textLayer"
+        style={{ width: wPx, height: hPx, pointerEvents: textSelect ? 'auto' : 'none', cursor: textSelect ? 'text' : undefined }}
+      />
       {base && <AnnotationLayer pageNumber={pageNumber} baseWidth={base.w} zoom={zoom} />}
     </div>
   )

@@ -29,6 +29,8 @@ export default function TopToolbar({ onOpen }: { onOpen: () => void }): JSX.Elem
   const layoutMode = usePdfStore((s) => s.layoutMode)
   const setLayoutMode = usePdfStore((s) => s.setLayoutMode)
   const setCurrentPage = usePdfStore((s) => s.setCurrentPage)
+  const textSelect = usePdfStore((s) => s.textSelect)
+  const setTextSelect = usePdfStore((s) => s.setTextSelect)
 
   const [pageInput, setPageInput] = useState(String(currentPage))
   useEffect(() => setPageInput(String(currentPage)), [currentPage])
@@ -110,6 +112,17 @@ export default function TopToolbar({ onOpen }: { onOpen: () => void }): JSX.Elem
       </button>
 
       <div className="flex-1" />
+
+      <button
+        type="button"
+        onClick={() => setTextSelect(!textSelect)}
+        disabled={!hasDoc}
+        title="Text markieren (Auswahl & Kopieren)"
+        aria-pressed={textSelect}
+        className={`mr-1.5 grid h-9 w-9 place-items-center rounded-control transition-colors disabled:text-ink-muted ${textSelect ? 'bg-primary/15 text-primary' : 'text-ink hover:bg-chrome-600'}`}
+      >
+        <Icon name="field-text" />
+      </button>
 
       <div className="mr-1.5 inline-flex gap-0.5 rounded-control border border-chrome-600 bg-chrome-700 p-0.5">
         {LAYOUTS.map((l) => (

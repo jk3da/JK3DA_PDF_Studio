@@ -70,6 +70,8 @@ interface PdfState {
   pageSize: { w: number; h: number } | null
   /** Anforderung an den Canvas, den Zoom einzupassen. */
   fitRequest: 'width' | 'page' | null
+  /** Textauswahl-Modus (Text-Layer interaktiv, Annotationen passiv). */
+  textSelect: boolean
 
   setDocument: (bytes: Uint8Array, name: string, path?: string | null) => void
   replaceBytes: (bytes: Uint8Array, name?: string, path?: string | null) => void
@@ -110,6 +112,7 @@ interface PdfState {
   setSearchQuery: (q: string) => void
   setPageSize: (s: { w: number; h: number } | null) => void
   requestFit: (m: 'width' | 'page' | null) => void
+  setTextSelect: (v: boolean) => void
 }
 
 export const usePdfStore = create<PdfState>((set, get) => ({
@@ -140,6 +143,7 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   searchQuery: '',
   pageSize: null,
   fitRequest: null,
+  textSelect: false,
 
   setDocument: (bytes, name, path = null) =>
     set({
@@ -312,5 +316,6 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   setLayoutMode: (m) => set({ layoutMode: m }),
   setSearchQuery: (q) => set({ searchQuery: q }),
   setPageSize: (s) => set({ pageSize: s }),
-  requestFit: (m) => set({ fitRequest: m })
+  requestFit: (m) => set({ fitRequest: m }),
+  setTextSelect: (v) => set({ textSelect: v })
 }))

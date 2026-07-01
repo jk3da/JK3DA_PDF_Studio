@@ -8,6 +8,9 @@ import { pageOps } from '../../lib/pdf/pageOps'
 import { docTools } from '../../lib/pdf/docTools'
 import { exportToImages } from '../../lib/pdf/exportImages'
 import { openImagesAsPdf } from '../../lib/pdf/fromImages'
+import { compressDocument } from '../../lib/pdf/optimize'
+import { importOfficeAsPdf } from '../../lib/pdf/convert'
+import { runOcr } from '../../lib/pdf/ocr'
 
 interface MItem {
   label?: string
@@ -108,7 +111,13 @@ export default function TitleBar({ onOpen }: { onOpen: () => void }): JSX.Elemen
         { label: 'Unterschrift…', icon: 'signature', onClick: () => s().setModal('signature'), disabled: dis },
         { label: 'Schwärzen anwenden', icon: 'apply-redaction', onClick: () => void applyRedactionToDoc(), disabled: dis },
         { label: 'Zuschneiden anwenden', icon: 'crop', onClick: () => void applyCropToDoc(), disabled: dis },
-        { label: 'Sicherheit & Metadaten…', icon: 'encrypt-lock', onClick: () => s().setModal('security'), disabled: dis }
+        { label: 'Sicherheit & Metadaten…', icon: 'encrypt-lock', onClick: () => s().setModal('security'), disabled: dis },
+        { divider: true },
+        { label: 'Office-Datei importieren… (nativ)', icon: 'import-office', onClick: () => void importOfficeAsPdf() },
+        { label: 'Komprimieren – E-Book (nativ)', icon: 'compress', onClick: () => void compressDocument('ebook'), disabled: dis },
+        { label: 'Komprimieren – Bildschirm (nativ)', icon: 'compress', onClick: () => void compressDocument('screen'), disabled: dis },
+        { label: 'OCR – Deutsch (nativ)', icon: 'ocr', onClick: () => void runOcr('deu'), disabled: dis },
+        { label: 'OCR – Englisch (nativ)', icon: 'ocr', onClick: () => void runOcr('eng'), disabled: dis }
       ]
     },
     {

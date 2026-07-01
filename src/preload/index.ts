@@ -7,7 +7,11 @@ import {
   type BatchFile,
   type EncryptRequest,
   type EncryptResult,
-  type ImageInput
+  type ImageInput,
+  type CompressResult,
+  type OfficeResult,
+  type OcrRequest,
+  type OcrResult
 } from '../shared/types'
 
 /**
@@ -30,6 +34,13 @@ const api = {
   /** Verschlüsselt das PDF via qpdf (falls vorhanden). */
   encryptPdf: (req: EncryptRequest): Promise<EncryptResult> =>
     ipcRenderer.invoke(IPC.encryptPdf, req),
+  /** Komprimiert das PDF via Ghostscript. */
+  compressPdf: (bytes: Uint8Array, quality: string): Promise<CompressResult> =>
+    ipcRenderer.invoke(IPC.compressPdf, { bytes, quality }),
+  /** Konvertiert eine gewählte Office-Datei zu PDF via LibreOffice. */
+  convertOfficeToPdf: (): Promise<OfficeResult> => ipcRenderer.invoke(IPC.convertOfficeToPdf),
+  /** OCR pro Bild -> durchsuchbare Ein-Seiten-PDFs via Tesseract. */
+  ocrImages: (req: OcrRequest): Promise<OcrResult> => ipcRenderer.invoke(IPC.ocrImages, req),
   /** Fenster-Steuerung (eigene Titelleiste). */
   winMinimize: (): Promise<void> => ipcRenderer.invoke(IPC.winMinimize),
   winMaximizeToggle: (): Promise<boolean> => ipcRenderer.invoke(IPC.winMaximizeToggle),
