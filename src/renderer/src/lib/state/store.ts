@@ -13,9 +13,11 @@ export type ToolId =
   | 'line'
   | 'arrow'
   | 'measure'
+  | 'measureArea'
   | 'rectangle'
   | 'ellipse'
   | 'redact'
+  | 'crop'
   | 'note'
   | 'stamp'
 

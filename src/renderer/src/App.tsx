@@ -11,6 +11,8 @@ import StatusBar from './components/StatusBar/StatusBar'
 import { usePdfStore } from './lib/state/store'
 import { createWelcomePdf } from './lib/pdf/sample'
 import { saveCurrentDocument } from './lib/pdf/save'
+import { applyRedactionToDoc } from './lib/pdf/redactApply'
+import { applyCropToDoc } from './lib/pdf/crop'
 import SignatureModal from './components/modals/SignatureModal'
 import FormsModal from './components/modals/FormsModal'
 import SecurityModal from './components/modals/SecurityModal'
@@ -29,6 +31,8 @@ export default function App(): JSX.Element {
   const selectedId = usePdfStore((s) => s.selectedId)
   const currentPage = usePdfStore((s) => s.currentPage)
   const numPages = usePdfStore((s) => s.numPages)
+  const hasRedactMarks = usePdfStore((s) => s.annotations.some((a) => a.type === 'redact'))
+  const hasCropMarks = usePdfStore((s) => s.annotations.some((a) => a.type === 'crop'))
 
   const handleOpen = useCallback(async () => {
     setStatus('Öffne Datei …')
@@ -119,6 +123,21 @@ export default function App(): JSX.Element {
               <span className="rounded-full bg-primary px-3 py-1 text-ui-sm font-medium text-white shadow-lg">
                 Auf die Seite klicken zum Platzieren · Esc bricht ab
               </span>
+            </div>
+          )}
+
+          {!pending && (hasRedactMarks || hasCropMarks) && (
+            <div className="absolute inset-x-0 top-3 z-40 flex justify-center gap-2">
+              {hasRedactMarks && (
+                <button type="button" onClick={() => void applyRedactionToDoc()} className="flex items-center gap-1.5 rounded-full bg-danger px-3 py-1 text-ui-sm font-semibold text-white shadow-lg hover:brightness-110">
+                  <Icon name="apply-redaction" size={15} /> Schwärzen anwenden
+                </button>
+              )}
+              {hasCropMarks && (
+                <button type="button" onClick={() => void applyCropToDoc()} className="flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-ui-sm font-semibold text-white shadow-lg hover:bg-primary-hover">
+                  <Icon name="crop" size={15} /> Zuschneiden anwenden
+                </button>
+              )}
             </div>
           )}
 

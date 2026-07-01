@@ -3,6 +3,7 @@ import { Icon } from '../ui/icons'
 import { usePdfStore } from '../../lib/state/store'
 import { saveCurrentDocument } from '../../lib/pdf/save'
 import { applyRedactionToDoc } from '../../lib/pdf/redactApply'
+import { applyCropToDoc } from '../../lib/pdf/crop'
 import { pageOps } from '../../lib/pdf/pageOps'
 import { docTools } from '../../lib/pdf/docTools'
 
@@ -100,6 +101,7 @@ export default function TitleBar({ onOpen }: { onOpen: () => void }): JSX.Elemen
       items: [
         { label: 'Unterschrift…', icon: 'signature', onClick: () => s().setModal('signature'), disabled: dis },
         { label: 'Schwärzen anwenden', icon: 'apply-redaction', onClick: () => void applyRedactionToDoc(), disabled: dis },
+        { label: 'Zuschneiden anwenden', icon: 'crop', onClick: () => void applyCropToDoc(), disabled: dis },
         { label: 'Sicherheit & Metadaten…', icon: 'encrypt-lock', onClick: () => s().setModal('security'), disabled: dis }
       ]
     },

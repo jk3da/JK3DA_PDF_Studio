@@ -11,8 +11,10 @@ const TOOLS: { id: ToolId; label: string; icon: string }[] = [
   { id: 'line', label: 'Linie', icon: 'line' },
   { id: 'arrow', label: 'Pfeil', icon: 'arrow' },
   { id: 'measure', label: 'Messen (Distanz)', icon: 'measure-distance' },
+  { id: 'measureArea', label: 'Messen (Fläche)', icon: 'measure-area' },
   { id: 'rectangle', label: 'Rechteck', icon: 'rectangle' },
   { id: 'ellipse', label: 'Ellipse', icon: 'ellipse' },
+  { id: 'crop', label: 'Zuschneiden', icon: 'crop' },
   { id: 'redact', label: 'Schwärzen', icon: 'redaction' },
   { id: 'stamp', label: 'Stempel', icon: 'stamp' }
 ]

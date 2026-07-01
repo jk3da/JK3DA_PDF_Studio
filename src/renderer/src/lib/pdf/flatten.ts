@@ -79,6 +79,24 @@ export async function flattenAnnotations(
         })
         break
       }
+      case 'measure-area': {
+        page.drawRectangle({
+          x: a.x,
+          y: ph - a.y - a.h,
+          width: a.w,
+          height: a.h,
+          borderColor: color,
+          borderWidth: a.strokeWidth,
+          borderOpacity: a.opacity ?? 1,
+          borderDashArray: [4, 3]
+        })
+        const areaMm = Math.round((a.w / 72) * 25.4 * ((a.h / 72) * 25.4))
+        const periMm = Math.round(2 * (((a.w + a.h) / 72) * 25.4))
+        const label = `${areaMm} mm2 - ${periMm} mm`
+        const tw = helv.widthOfTextAtSize(label, 9)
+        page.drawText(label, { x: a.x + a.w / 2 - tw / 2, y: ph - a.y - a.h / 2, size: 9, font: helv, color })
+        break
+      }
       case 'line': {
         const s = { x: a.x1, y: ph - a.y1 }
         const e = { x: a.x2, y: ph - a.y2 }

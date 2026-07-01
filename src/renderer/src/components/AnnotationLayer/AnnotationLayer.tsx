@@ -20,9 +20,11 @@ const TOOL_CURSOR: Record<string, string> = {
   line: CURSORS.line,
   arrow: CURSORS.arrow,
   measure: CURSORS['measure-distance'],
+  measureArea: CURSORS['measure-area'],
   rectangle: CURSORS.rectangle,
   ellipse: CURSORS.ellipse,
   redact: CURSORS.redaction,
+  crop: 'crosshair',
   note: CURSORS.note,
   stamp: CURSORS.stamp
 }
@@ -87,6 +89,8 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
     if (tool === 'ellipse') return { id: 'draft', page: pageNumber, type: 'ellipse', x: bx, y: by, w: bw, h: bh, color, strokeWidth: strokeW, opacity }
     if (tool === 'highlight') return { id: 'draft', page: pageNumber, type: 'highlight', x: bx, y: by, w: bw, h: bh, color: HIGHLIGHT_COLOR, strokeWidth: strokeW, opacity: 0.35 }
     if (tool === 'redact') return { id: 'draft', page: pageNumber, type: 'redact', x: bx, y: by, w: bw, h: bh, color: '#111111', strokeWidth: strokeW }
+    if (tool === 'crop') return { id: 'draft', page: pageNumber, type: 'crop', x: bx, y: by, w: bw, h: bh, color: '#3b82f6', strokeWidth: 1 }
+    if (tool === 'measureArea') return { id: 'draft', page: pageNumber, type: 'measure-area', x: bx, y: by, w: bw, h: bh, color, strokeWidth: strokeW, opacity }
     return { id: 'draft', page: pageNumber, type: 'rect', x: bx, y: by, w: bw, h: bh, color, strokeWidth: strokeW, opacity }
   }
 
@@ -280,6 +284,19 @@ function AnnotationView({ a, zoom, selected, hidden }: ViewProps): JSX.Element |
       return <div className="absolute" style={{ left: a.x * zoom, top: a.y * zoom, width: a.w * zoom, height: a.h * zoom, border: `${a.strokeWidth * zoom}px solid ${a.color}`, borderRadius: '50%', opacity: a.opacity ?? 1, ...ring }} />
     case 'redact':
       return <div className="absolute" style={{ left: a.x * zoom, top: a.y * zoom, width: a.w * zoom, height: a.h * zoom, background: 'rgba(10,10,10,0.82)', border: '1.5px solid #e11d2a', ...ring }} title="Schwärzung (anwenden macht Inhalt unwiderruflich unlesbar)" />
+    case 'crop':
+      return <div className="absolute" style={{ left: a.x * zoom, top: a.y * zoom, width: a.w * zoom, height: a.h * zoom, border: '1.5px dashed #3b82f6', background: 'rgba(59,130,246,0.08)', ...ring }} title="Zuschneiden — in der Toolbar anwenden" />
+    case 'measure-area': {
+      const areaMm = Math.round((a.w / 72) * 25.4 * ((a.h / 72) * 25.4))
+      const periMm = Math.round(2 * (((a.w + a.h) / 72) * 25.4))
+      return (
+        <div className="absolute" style={{ left: a.x * zoom, top: a.y * zoom, width: a.w * zoom, height: a.h * zoom, border: `${a.strokeWidth * zoom}px dashed ${a.color}`, opacity: a.opacity ?? 1, ...ring }}>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white">
+            {areaMm} mm² · {periMm} mm
+          </div>
+        </div>
+      )
+    }
     case 'stamp':
       return (
         <div className="absolute flex items-center justify-center font-bold uppercase tracking-wide" style={{ left: a.x * zoom, top: a.y * zoom, width: a.w * zoom, height: a.h * zoom, border: `2px solid ${a.color}`, color: a.color, background: `${a.color}14`, fontSize: Math.min(a.h * 0.45, 18) * zoom, ...ring }}>

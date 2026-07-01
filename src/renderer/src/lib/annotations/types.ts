@@ -10,6 +10,8 @@ export type AnnotationType =
   | 'highlight'
   | 'rect'
   | 'redact'
+  | 'crop'
+  | 'measure-area'
   | 'note'
   | 'draw'
   | 'signature'
@@ -42,7 +44,7 @@ export interface NoteAnnotation {
 export interface BoxAnnotation {
   id: string
   page: number
-  type: 'highlight' | 'rect' | 'redact'
+  type: 'highlight' | 'rect' | 'redact' | 'crop' | 'measure-area'
   x: number
   y: number
   w: number
@@ -139,6 +141,8 @@ export function annotationBounds(a: Annotation): { x: number; y: number; w: numb
     case 'highlight':
     case 'rect':
     case 'redact':
+    case 'crop':
+    case 'measure-area':
     case 'stamp':
     case 'image':
     case 'ellipse':
@@ -172,6 +176,8 @@ export function moveAnnotation(a: Annotation, dx: number, dy: number): Annotatio
     case 'highlight':
     case 'rect':
     case 'redact':
+    case 'crop':
+    case 'measure-area':
     case 'stamp':
     case 'image':
     case 'ellipse':

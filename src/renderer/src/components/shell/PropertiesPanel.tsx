@@ -9,6 +9,8 @@ function meta(a: Annotation): { icon: string; label: string } {
     case 'line': return a.arrow ? { icon: 'arrow', label: 'Pfeil' } : { icon: 'line', label: 'Linie' }
     case 'highlight': return { icon: 'highlight', label: 'Markierung' }
     case 'redact': return { icon: 'redaction', label: 'Schwärzung' }
+    case 'crop': return { icon: 'crop', label: 'Zuschneiden' }
+    case 'measure-area': return { icon: 'measure-area', label: 'Fläche' }
     case 'text': return { icon: 'text', label: 'Text' }
     case 'note': return { icon: 'note', label: 'Notiz' }
     case 'draw':
