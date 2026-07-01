@@ -14,6 +14,8 @@ import { saveCurrentDocument } from './lib/pdf/save'
 import SignatureModal from './components/modals/SignatureModal'
 import FormsModal from './components/modals/FormsModal'
 import SecurityModal from './components/modals/SecurityModal'
+import AboutModal from './components/modals/AboutModal'
+import PlacementGhost from './components/shell/PlacementGhost'
 
 export default function App(): JSX.Element {
   const setDocument = usePdfStore((s) => s.setDocument)
@@ -129,9 +131,12 @@ export default function App(): JSX.Element {
 
       <StatusBar />
 
+      <PlacementGhost />
+
       {modal === 'signature' && <SignatureModal />}
       {modal === 'forms' && <FormsModal />}
       {modal === 'security' && <SecurityModal />}
+      {modal === 'about' && <AboutModal />}
     </div>
   )
 }

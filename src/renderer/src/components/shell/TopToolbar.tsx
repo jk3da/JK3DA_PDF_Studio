@@ -12,10 +12,6 @@ const LAYOUTS: { id: LayoutMode; label: string; icon: string }[] = [
   { id: 'spread', label: 'Doppelseite', icon: 'layout-spread' }
 ]
 
-function goToPage(n: number): void {
-  document.getElementById(`pdf-page-${n}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
 export default function TopToolbar({ onOpen }: { onOpen: () => void }): JSX.Element {
   const hasDoc = usePdfStore((s) => s.bytes !== null)
   const zoom = usePdfStore((s) => s.zoom)
@@ -31,16 +27,19 @@ export default function TopToolbar({ onOpen }: { onOpen: () => void }): JSX.Elem
   const numPages = usePdfStore((s) => s.numPages)
   const layoutMode = usePdfStore((s) => s.layoutMode)
   const setLayoutMode = usePdfStore((s) => s.setLayoutMode)
+  const setCurrentPage = usePdfStore((s) => s.setCurrentPage)
   const searchQuery = usePdfStore((s) => s.searchQuery)
   const setSearchQuery = usePdfStore((s) => s.setSearchQuery)
 
   const [pageInput, setPageInput] = useState(String(currentPage))
   useEffect(() => setPageInput(String(currentPage)), [currentPage])
 
-  const jump = (): void => {
-    const n = Math.min(Math.max(1, Number(pageInput) || 1), numPages || 1)
-    goToPage(n)
+  const go = (n: number): void => {
+    const clamped = Math.min(Math.max(1, n), numPages || 1)
+    if (layoutMode === 'single') setCurrentPage(clamped)
+    else document.getElementById(`pdf-page-${clamped}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
+  const jump = (): void => go(Number(pageInput) || 1)
 
   return (
     <div className="flex h-toolbar shrink-0 items-center gap-0.5 border-b border-chrome-900 bg-chrome-800 px-2 text-ink shadow-toolbar">
@@ -104,7 +103,7 @@ export default function TopToolbar({ onOpen }: { onOpen: () => void }): JSX.Elem
 
       <Divider />
 
-      <button type="button" onClick={() => goToPage(Math.max(1, currentPage - 1))} disabled={!hasDoc} title="Vorherige Seite" className={iconBtn}>
+      <button type="button" onClick={() => go(currentPage - 1)} disabled={!hasDoc} title="Vorherige Seite" className={iconBtn}>
         <Icon name="prev-page" />
       </button>
       <div className="flex items-center gap-1.5 text-ui text-[#c8ccd2]">
@@ -118,7 +117,7 @@ export default function TopToolbar({ onOpen }: { onOpen: () => void }): JSX.Elem
         />
         / {numPages || 0}
       </div>
-      <button type="button" onClick={() => goToPage(Math.min(numPages, currentPage + 1))} disabled={!hasDoc} title="Nächste Seite" className={iconBtn}>
+      <button type="button" onClick={() => go(currentPage + 1)} disabled={!hasDoc} title="Nächste Seite" className={iconBtn}>
         <Icon name="next-page" />
       </button>
 

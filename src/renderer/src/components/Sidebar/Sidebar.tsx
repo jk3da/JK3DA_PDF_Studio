@@ -19,12 +19,15 @@ export default function Sidebar(): JSX.Element {
   const hasDoc = usePdfStore((s) => s.bytes !== null)
   const leftTab = usePdfStore((s) => s.leftTab)
   const setLeftTab = usePdfStore((s) => s.setLeftTab)
+  const layoutMode = usePdfStore((s) => s.layoutMode)
+  const setCurrentPage = usePdfStore((s) => s.setCurrentPage)
 
   const dragFrom = useRef<number | null>(null)
   const [dragOver, setDragOver] = useState<number | null>(null)
 
   const goTo = (page: number): void => {
-    document.getElementById(`pdf-page-${page}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (layoutMode === 'single') setCurrentPage(page)
+    else document.getElementById(`pdf-page-${page}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
   const onDragStart = (index: number) => (e: DragEvent): void => {

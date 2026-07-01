@@ -19,6 +19,8 @@ export default function PdfCanvas(): JSX.Element {
   const fitRequest = usePdfStore((s) => s.fitRequest)
   const requestFit = usePdfStore((s) => s.requestFit)
   const setZoom = usePdfStore((s) => s.setZoom)
+  const layoutMode = usePdfStore((s) => s.layoutMode)
+  const currentPage = usePdfStore((s) => s.currentPage)
 
   const docRef = useRef<typeof doc>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -96,12 +98,21 @@ export default function PdfCanvas(): JSX.Element {
     return () => el.removeEventListener('scroll', onScroll)
   }, [setCurrentPage, doc])
 
+  const pageNumbers =
+    doc && layoutMode === 'single'
+      ? [Math.min(Math.max(1, currentPage), doc.numPages)]
+      : doc
+        ? Array.from({ length: doc.numPages }, (_, i) => i + 1)
+        : []
+
+  const containerCls =
+    layoutMode === 'spread'
+      ? 'flex flex-row flex-wrap content-start justify-center gap-3'
+      : 'flex flex-col items-center'
+
   return (
-    <div ref={containerRef} className="h-full w-full overflow-auto bg-canvas py-2" data-testid="pdf-scroll">
-      {doc &&
-        Array.from({ length: doc.numPages }, (_, i) => i + 1).map((n) => (
-          <PdfPage key={`p${n}-of${doc.numPages}`} pdf={doc} pageNumber={n} zoom={zoom} />
-        ))}
+    <div ref={containerRef} className={`h-full w-full overflow-auto bg-canvas py-2 ${containerCls}`} data-testid="pdf-scroll">
+      {doc && pageNumbers.map((n) => <PdfPage key={`p${n}-of${doc.numPages}`} pdf={doc} pageNumber={n} zoom={zoom} />)}
     </div>
   )
 }
