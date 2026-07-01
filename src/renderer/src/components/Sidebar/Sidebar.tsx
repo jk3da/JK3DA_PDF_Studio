@@ -3,6 +3,7 @@ import { Icon } from '../ui/icons'
 import { usePdfStore, type LeftTab } from '../../lib/state/store'
 import { pageOps } from '../../lib/pdf/pageOps'
 import Thumbnail from './Thumbnail'
+import Bookmarks from './Bookmarks'
 
 const THUMB_W = 150
 
@@ -117,8 +118,10 @@ export default function Sidebar(): JSX.Element {
         </>
       )}
 
-      {leftTab === 'bookmarks' && <Placeholder text="Keine Lesezeichen." />}
-      {leftTab === 'outline' && <Placeholder text="Keine Gliederung." />}
+      {leftTab === 'bookmarks' &&
+        (doc ? <Bookmarks pdf={doc} onNavigate={goTo} /> : <Placeholder text="Kein Dokument geöffnet." />)}
+      {leftTab === 'outline' &&
+        (doc ? <Bookmarks pdf={doc} onNavigate={goTo} /> : <Placeholder text="Kein Dokument geöffnet." />)}
     </aside>
   )
 }

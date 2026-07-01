@@ -15,6 +15,7 @@ import SignatureModal from './components/modals/SignatureModal'
 import FormsModal from './components/modals/FormsModal'
 import SecurityModal from './components/modals/SecurityModal'
 import AboutModal from './components/modals/AboutModal'
+import WatermarkModal from './components/modals/WatermarkModal'
 import PlacementGhost from './components/shell/PlacementGhost'
 
 export default function App(): JSX.Element {
@@ -137,6 +138,7 @@ export default function App(): JSX.Element {
       {modal === 'forms' && <FormsModal />}
       {modal === 'security' && <SecurityModal />}
       {modal === 'about' && <AboutModal />}
+      {modal === 'watermark' && <WatermarkModal />}
     </div>
   )
 }

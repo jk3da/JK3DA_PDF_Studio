@@ -4,6 +4,7 @@ import { usePdfStore } from '../../lib/state/store'
 import { saveCurrentDocument } from '../../lib/pdf/save'
 import { applyRedactionToDoc } from '../../lib/pdf/redactApply'
 import { pageOps } from '../../lib/pdf/pageOps'
+import { docTools } from '../../lib/pdf/docTools'
 
 interface MItem {
   label?: string
@@ -83,7 +84,10 @@ export default function TitleBar({ onOpen }: { onOpen: () => void }): JSX.Elemen
         { divider: true },
         { label: 'Seite links drehen', icon: 'rotate-left', onClick: () => void pageOps.rotate(curIdx(), -90), disabled: dis },
         { label: 'Seite rechts drehen', icon: 'rotate-right', onClick: () => void pageOps.rotate(curIdx(), 90), disabled: dis },
-        { label: 'Seite löschen', icon: 'delete-page', onClick: () => void pageOps.remove(curIdx()), disabled: dis }
+        { label: 'Seite löschen', icon: 'delete-page', onClick: () => void pageOps.remove(curIdx()), disabled: dis },
+        { divider: true },
+        { label: 'Wasserzeichen…', icon: 'watermark', onClick: () => s().setModal('watermark'), disabled: dis },
+        { label: 'Seitenzahlen einfügen', icon: 'page-numbers', onClick: () => void docTools.pageNumbers(), disabled: dis }
       ]
     },
     {

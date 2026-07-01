@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Icon } from '../ui/icons'
 import { usePdfStore, type LayoutMode } from '../../lib/state/store'
 import { saveCurrentDocument } from '../../lib/pdf/save'
+import SearchBox from './SearchBox'
 
 const iconBtn =
   'grid h-9 w-9 place-items-center rounded-control text-ink transition-colors hover:bg-chrome-600 disabled:cursor-not-allowed disabled:text-ink-muted disabled:hover:bg-transparent'
@@ -28,8 +29,6 @@ export default function TopToolbar({ onOpen }: { onOpen: () => void }): JSX.Elem
   const layoutMode = usePdfStore((s) => s.layoutMode)
   const setLayoutMode = usePdfStore((s) => s.setLayoutMode)
   const setCurrentPage = usePdfStore((s) => s.setCurrentPage)
-  const searchQuery = usePdfStore((s) => s.searchQuery)
-  const setSearchQuery = usePdfStore((s) => s.setSearchQuery)
 
   const [pageInput, setPageInput] = useState(String(currentPage))
   useEffect(() => setPageInput(String(currentPage)), [currentPage])
@@ -64,18 +63,7 @@ export default function TopToolbar({ onOpen }: { onOpen: () => void }): JSX.Elem
 
       <Divider />
 
-      <div className="relative w-[220px]">
-        <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-muted">
-          <Icon name="search" size={16} />
-        </span>
-        <input
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Im Dokument suchen…"
-          disabled={!hasDoc}
-          className="h-9 w-full rounded-control border border-chrome-600 bg-chrome-700 pl-[30px] pr-2.5 text-ui text-ink outline-none placeholder:text-ink-muted focus:border-primary disabled:opacity-50"
-        />
-      </div>
+      <SearchBox />
 
       <Divider />
 
