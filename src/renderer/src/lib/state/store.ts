@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
-import type { Annotation } from '../annotations/types'
+import type { Annotation, PendingPlacement } from '../annotations/types'
+
+export type ModalId = 'signature' | 'forms'
 
 export type ToolId =
   | 'select'
@@ -37,6 +39,10 @@ interface PdfState {
   currentColor: string
   past: Annotation[][]
   future: Annotation[][]
+  /** Wartet auf Platzierung per Klick (z. B. Signatur/Bild). */
+  pending: PendingPlacement | null
+  /** Aktuell offener modaler Dialog. */
+  modal: ModalId | null
 
   setDocument: (bytes: Uint8Array, name: string, path?: string | null) => void
   replaceBytes: (bytes: Uint8Array, name?: string, path?: string | null) => void
@@ -61,6 +67,8 @@ interface PdfState {
   clearAnnotations: () => void
   undo: () => void
   redo: () => void
+  setPending: (p: PendingPlacement | null) => void
+  setModal: (m: ModalId | null) => void
 }
 
 export const usePdfStore = create<PdfState>((set, get) => ({
@@ -80,6 +88,8 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   currentColor: '#e11d2a',
   past: [],
   future: [],
+  pending: null,
+  modal: null,
 
   setDocument: (bytes, name, path = null) =>
     set({
@@ -201,5 +211,8 @@ export const usePdfStore = create<PdfState>((set, get) => ({
         selectedId: null,
         dirty: true
       }
-    })
+    }),
+
+  setPending: (p) => set({ pending: p }),
+  setModal: (m) => set({ modal: m })
 }))

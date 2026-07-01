@@ -13,6 +13,7 @@ export type AnnotationType =
   | 'draw'
   | 'signature'
   | 'stamp'
+  | 'image'
 
 export interface TextAnnotation {
   id: string
@@ -68,12 +69,28 @@ export interface StampAnnotation {
   color: string
 }
 
+export interface ImageAnnotation {
+  id: string
+  page: number
+  type: 'image'
+  x: number
+  y: number
+  w: number
+  h: number
+  /** PNG- oder JPEG-Data-URL (z. B. gezeichnete Signatur oder importiertes Bild). */
+  dataUrl: string
+}
+
 export type Annotation =
   | TextAnnotation
   | NoteAnnotation
   | BoxAnnotation
   | DrawAnnotation
   | StampAnnotation
+  | ImageAnnotation
+
+/** Etwas, das beim nächsten Klick auf eine Seite platziert wird (z. B. Signatur). */
+export type PendingPlacement = { kind: 'image'; dataUrl: string; w: number; h: number }
 
 /** Liefert die Bounding-Box einer Annotation in (top-left) Punkten. */
 export function annotationBounds(a: Annotation): { x: number; y: number; w: number; h: number } {
@@ -85,6 +102,7 @@ export function annotationBounds(a: Annotation): { x: number; y: number; w: numb
     case 'highlight':
     case 'rect':
     case 'stamp':
+    case 'image':
       return { x: a.x, y: a.y, w: a.w, h: a.h }
     case 'draw':
     case 'signature': {
@@ -108,6 +126,7 @@ export function moveAnnotation(a: Annotation, dx: number, dy: number): Annotatio
     case 'highlight':
     case 'rect':
     case 'stamp':
+    case 'image':
       return { ...a, x: a.x + dx, y: a.y + dy }
   }
 }

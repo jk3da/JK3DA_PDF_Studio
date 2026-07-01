@@ -6,11 +6,15 @@ import StatusBar from './components/StatusBar/StatusBar'
 import { usePdfStore } from './lib/state/store'
 import { createWelcomePdf } from './lib/pdf/sample'
 import { saveCurrentDocument } from './lib/pdf/save'
+import SignatureModal from './components/modals/SignatureModal'
+import FormsModal from './components/modals/FormsModal'
 
 export default function App(): JSX.Element {
   const setDocument = usePdfStore((s) => s.setDocument)
   const setStatus = usePdfStore((s) => s.setStatus)
   const hasDoc = usePdfStore((s) => s.bytes !== null)
+  const modal = usePdfStore((s) => s.modal)
+  const pending = usePdfStore((s) => s.pending)
 
   const handleOpen = useCallback(async () => {
     setStatus('Öffne Datei …')
@@ -65,7 +69,9 @@ export default function App(): JSX.Element {
         e.preventDefault()
         store.removeAnnotation(store.selectedId)
       } else if (e.key === 'Escape') {
-        store.selectAnnotation(null)
+        if (store.modal) store.setModal(null)
+        else if (store.pending) store.setPending(null)
+        else store.selectAnnotation(null)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -73,7 +79,7 @@ export default function App(): JSX.Element {
   }, [handleOpen])
 
   return (
-    <div className="flex h-full w-full flex-col bg-chrome-900 font-sans text-gray-100">
+    <div className="relative flex h-full w-full flex-col bg-chrome-900 font-sans text-gray-100">
       <Toolbar onOpen={handleOpen} />
       <div className="flex min-h-0 flex-1">
         <Sidebar />
@@ -95,6 +101,17 @@ export default function App(): JSX.Element {
         </main>
       </div>
       <StatusBar />
+
+      {pending && (
+        <div className="pointer-events-none absolute inset-x-0 top-14 z-40 flex justify-center">
+          <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-white shadow-lg">
+            Auf die Seite klicken zum Platzieren · Esc bricht ab
+          </span>
+        </div>
+      )}
+
+      {modal === 'signature' && <SignatureModal />}
+      {modal === 'forms' && <FormsModal />}
     </div>
   )
 }

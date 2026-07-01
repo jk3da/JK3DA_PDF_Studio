@@ -30,7 +30,7 @@ export async function flattenAnnotations(
     const page = pages[a.page - 1]
     if (!page) continue
     const ph = page.getHeight()
-    const color = hexToRgb(a.color)
+    const color = hexToRgb('color' in a ? a.color : '#000000')
 
     switch (a.type) {
       case 'text': {
@@ -133,8 +133,23 @@ export async function flattenAnnotations(
         })
         break
       }
+      case 'image': {
+        const bin = dataUrlToBytes(a.dataUrl)
+        const isPng = a.dataUrl.startsWith('data:image/png')
+        const img = isPng ? await pdf.embedPng(bin) : await pdf.embedJpg(bin)
+        page.drawImage(img, { x: a.x, y: ph - a.y - a.h, width: a.w, height: a.h })
+        break
+      }
     }
   }
 
   return pdf.save()
+}
+
+function dataUrlToBytes(dataUrl: string): Uint8Array {
+  const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1)
+  const bin = atob(base64)
+  const out = new Uint8Array(bin.length)
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
+  return out
 }

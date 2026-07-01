@@ -13,6 +13,7 @@ import {
   StickyNote,
   PenLine,
   Stamp,
+  FormInput,
   type LucideIcon
 } from 'lucide-react'
 import { usePdfStore, type ToolId } from '../../lib/state/store'
@@ -31,7 +32,6 @@ const TOOLS: ToolDef[] = [
   { id: 'highlight', label: 'Markieren', icon: Highlighter },
   { id: 'rectangle', label: 'Rechteck', icon: Square },
   { id: 'note', label: 'Notiz', icon: StickyNote },
-  { id: 'signature', label: 'Unterschrift', icon: PenLine },
   { id: 'stamp', label: 'Stempel', icon: Stamp }
 ]
 
@@ -52,6 +52,7 @@ export default function Toolbar({ onOpen }: { onOpen: () => void }): JSX.Element
   const canUndo = usePdfStore((s) => s.past.length > 0)
   const canRedo = usePdfStore((s) => s.future.length > 0)
   const dirty = usePdfStore((s) => s.dirty)
+  const setModal = usePdfStore((s) => s.setModal)
 
   return (
     <div className="flex h-12 shrink-0 items-center gap-1 border-b border-chrome-700 bg-chrome-800 px-2 text-chrome-100">
@@ -120,6 +121,27 @@ export default function Toolbar({ onOpen }: { onOpen: () => void }): JSX.Element
           )
         })}
       </div>
+
+      <div className="mx-1 h-6 w-px bg-chrome-600" />
+
+      <button
+        type="button"
+        onClick={() => setModal('signature')}
+        disabled={!hasDoc}
+        title="Unterschrift"
+        className="flex h-9 w-9 items-center justify-center rounded text-gray-200 hover:bg-chrome-700 disabled:opacity-40"
+      >
+        <PenLine size={18} />
+      </button>
+      <button
+        type="button"
+        onClick={() => setModal('forms')}
+        disabled={!hasDoc}
+        title="Formular ausfüllen"
+        className="flex h-9 w-9 items-center justify-center rounded text-gray-200 hover:bg-chrome-700 disabled:opacity-40"
+      >
+        <FormInput size={18} />
+      </button>
 
       <div className="mx-1 h-6 w-px bg-chrome-600" />
 

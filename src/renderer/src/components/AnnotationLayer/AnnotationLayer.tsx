@@ -31,11 +31,13 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
   const color = usePdfStore((s) => s.currentColor)
   const selectedId = usePdfStore((s) => s.selectedId)
   const annotations = usePdfStore((s) => s.annotations)
+  const pending = usePdfStore((s) => s.pending)
   const addAnnotation = usePdfStore((s) => s.addAnnotation)
   const updateAnnotation = usePdfStore((s) => s.updateAnnotation)
   const selectAnnotation = usePdfStore((s) => s.selectAnnotation)
   const beginHistory = usePdfStore((s) => s.beginHistory)
   const setTool = usePdfStore((s) => s.setTool)
+  const setPending = usePdfStore((s) => s.setPending)
 
   const layerRef = useRef<HTMLDivElement>(null)
   const gesture = useRef<Gesture | null>(null)
@@ -68,6 +70,24 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>): void => {
     if (e.button !== 0) return
     const { x, y } = toPoints(e.clientX, e.clientY)
+
+    // Wartende Platzierung (Signatur/Bild) hat Vorrang vor dem aktiven Werkzeug.
+    if (pending) {
+      addAnnotation({
+        id: newId(),
+        page: pageNumber,
+        type: 'image',
+        x: x - pending.w / 2,
+        y: y - pending.h / 2,
+        w: pending.w,
+        h: pending.h,
+        dataUrl: pending.dataUrl
+      })
+      setPending(null)
+      setTool('select')
+      return
+    }
+
     layerRef.current?.setPointerCapture(e.pointerId)
 
     if (tool === 'select') {
@@ -310,6 +330,16 @@ function AnnotationView({ a, zoom, selected, hidden }: ViewProps): JSX.Element |
         >
           !
         </div>
+      )
+    case 'image':
+      return (
+        <img
+          src={a.dataUrl}
+          alt=""
+          draggable={false}
+          className="absolute select-none"
+          style={{ left: a.x * zoom, top: a.y * zoom, width: a.w * zoom, height: a.h * zoom, ...ring }}
+        />
       )
     case 'draw':
     case 'signature': {
