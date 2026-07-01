@@ -16,6 +16,7 @@ import FormsModal from './components/modals/FormsModal'
 import SecurityModal from './components/modals/SecurityModal'
 import AboutModal from './components/modals/AboutModal'
 import WatermarkModal from './components/modals/WatermarkModal'
+import HeaderFooterModal from './components/modals/HeaderFooterModal'
 import PlacementGhost from './components/shell/PlacementGhost'
 
 export default function App(): JSX.Element {
@@ -139,6 +140,7 @@ export default function App(): JSX.Element {
       {modal === 'security' && <SecurityModal />}
       {modal === 'about' && <AboutModal />}
       {modal === 'watermark' && <WatermarkModal />}
+      {modal === 'headerFooter' && <HeaderFooterModal />}
     </div>
   )
 }

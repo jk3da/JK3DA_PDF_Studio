@@ -77,6 +77,8 @@ export interface LineAnnotation {
   strokeWidth: number
   /** Pfeilspitze am Endpunkt. */
   arrow?: boolean
+  /** Messlinie: zeigt die Länge in mm. */
+  measure?: boolean
   opacity?: number
 }
 

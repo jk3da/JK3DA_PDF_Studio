@@ -10,6 +10,7 @@ const TOOLS: { id: ToolId; label: string; icon: string }[] = [
   { id: 'highlight', label: 'Markieren', icon: 'highlight' },
   { id: 'line', label: 'Linie', icon: 'line' },
   { id: 'arrow', label: 'Pfeil', icon: 'arrow' },
+  { id: 'measure', label: 'Messen (Distanz)', icon: 'measure-distance' },
   { id: 'rectangle', label: 'Rechteck', icon: 'rectangle' },
   { id: 'ellipse', label: 'Ellipse', icon: 'ellipse' },
   { id: 'redact', label: 'Schwärzen', icon: 'redaction' },

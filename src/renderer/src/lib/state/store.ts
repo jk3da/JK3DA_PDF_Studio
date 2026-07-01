@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import { moveAnnotation, type Annotation, type PendingPlacement } from '../annotations/types'
 
-export type ModalId = 'signature' | 'forms' | 'security' | 'about' | 'watermark'
+export type ModalId = 'signature' | 'forms' | 'security' | 'about' | 'watermark' | 'headerFooter'
 
 export type ToolId =
   | 'select'
@@ -12,6 +12,7 @@ export type ToolId =
   | 'highlight'
   | 'line'
   | 'arrow'
+  | 'measure'
   | 'rectangle'
   | 'ellipse'
   | 'redact'

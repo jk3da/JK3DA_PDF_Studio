@@ -92,6 +92,12 @@ export async function flattenAnnotations(
           page.drawLine({ start: e, end: { x: e.x - len * Math.cos(h1), y: e.y - len * Math.sin(h1) }, thickness: a.strokeWidth, color, opacity: op })
           page.drawLine({ start: e, end: { x: e.x - len * Math.cos(h2), y: e.y - len * Math.sin(h2) }, thickness: a.strokeWidth, color, opacity: op })
         }
+        if (a.measure) {
+          const label = `${Math.round((Math.hypot(a.x2 - a.x1, a.y2 - a.y1) / 72) * 25.4)} mm`
+          const size = 9
+          const tw = helv.widthOfTextAtSize(label, size)
+          page.drawText(label, { x: (a.x1 + a.x2) / 2 - tw / 2, y: ph - (a.y1 + a.y2) / 2 + 4, size, font: helv, color })
+        }
         break
       }
       case 'note': {

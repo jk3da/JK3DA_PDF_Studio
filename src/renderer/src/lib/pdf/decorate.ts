@@ -25,6 +25,29 @@ export async function addWatermark(
   return doc.save()
 }
 
+/** Kopf-/Fußzeile (mittig) auf alle Seiten. */
+export async function addHeaderFooter(
+  bytes: Uint8Array,
+  opts: { header: string; footer: string }
+): Promise<Uint8Array> {
+  const doc = await PDFDocument.load(bytes)
+  const font = await doc.embedFont(StandardFonts.Helvetica)
+  const size = 9
+  const col = rgb(0.3, 0.3, 0.3)
+  for (const page of doc.getPages()) {
+    const { width, height } = page.getSize()
+    if (opts.header.trim()) {
+      const tw = font.widthOfTextAtSize(opts.header, size)
+      page.drawText(opts.header, { x: width / 2 - tw / 2, y: height - 26, size, font, color: col })
+    }
+    if (opts.footer.trim()) {
+      const tw = font.widthOfTextAtSize(opts.footer, size)
+      page.drawText(opts.footer, { x: width / 2 - tw / 2, y: 14, size, font, color: col })
+    }
+  }
+  return doc.save()
+}
+
 /** Seitenzahlen "n / N" mittig unten. */
 export async function addPageNumbers(bytes: Uint8Array): Promise<Uint8Array> {
   const doc = await PDFDocument.load(bytes)

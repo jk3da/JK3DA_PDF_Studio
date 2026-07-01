@@ -87,6 +87,7 @@ export default function TitleBar({ onOpen }: { onOpen: () => void }): JSX.Elemen
         { label: 'Seite löschen', icon: 'delete-page', onClick: () => void pageOps.remove(curIdx()), disabled: dis },
         { divider: true },
         { label: 'Wasserzeichen…', icon: 'watermark', onClick: () => s().setModal('watermark'), disabled: dis },
+        { label: 'Kopf-/Fußzeile…', icon: 'header-footer', onClick: () => s().setModal('headerFooter'), disabled: dis },
         { label: 'Seitenzahlen einfügen', icon: 'page-numbers', onClick: () => void docTools.pageNumbers(), disabled: dis }
       ]
     },

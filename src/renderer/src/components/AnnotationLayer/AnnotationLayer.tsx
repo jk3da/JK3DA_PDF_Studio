@@ -19,6 +19,7 @@ const TOOL_CURSOR: Record<string, string> = {
   highlight: CURSORS.highlight,
   line: CURSORS.line,
   arrow: CURSORS.arrow,
+  measure: CURSORS['measure-distance'],
   rectangle: CURSORS.rectangle,
   ellipse: CURSORS.ellipse,
   redact: CURSORS.redaction,
@@ -100,6 +101,7 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
     color,
     strokeWidth: strokeW,
     arrow: tool === 'arrow',
+    measure: tool === 'measure',
     opacity
   })
 
@@ -149,7 +151,7 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
       return
     }
 
-    if (tool === 'line' || tool === 'arrow') {
+    if (tool === 'line' || tool === 'arrow' || tool === 'measure') {
       gesture.current = { kind: 'line', startX: x, startY: y }
       return
     }
@@ -306,10 +308,18 @@ function AnnotationView({ a, zoom, selected, hidden }: ViewProps): JSX.Element |
         const p2 = `${(a.x2 - len * Math.cos(h2)) * zoom},${(a.y2 - len * Math.sin(h2)) * zoom}`
         return <polyline points={`${p1} ${a.x2 * zoom},${a.y2 * zoom} ${p2}`} fill="none" stroke={a.color} strokeWidth={a.strokeWidth * zoom} strokeLinecap="round" strokeLinejoin="round" />
       }
+      const mx = ((a.x1 + a.x2) / 2) * zoom
+      const my = ((a.y1 + a.y2) / 2) * zoom
+      const mmLen = Math.round((Math.hypot(a.x2 - a.x1, a.y2 - a.y1) / 72) * 25.4)
       return (
         <svg className="pointer-events-none absolute inset-0 overflow-visible" style={{ opacity: a.opacity ?? 1 }}>
           <line x1={a.x1 * zoom} y1={a.y1 * zoom} x2={a.x2 * zoom} y2={a.y2 * zoom} stroke={a.color} strokeWidth={a.strokeWidth * zoom} strokeLinecap="round" />
           {arrowHead()}
+          {a.measure && (
+            <text x={mx} y={my - 5} textAnchor="middle" fontSize={11} fill={a.color} stroke="#fff" strokeWidth={3} style={{ paintOrder: 'stroke', fontWeight: 600 }}>
+              {mmLen} mm
+            </text>
+          )}
           {selected && <rect x={b.x * zoom - 3} y={b.y * zoom - 3} width={b.w * zoom + 6} height={b.h * zoom + 6} fill="none" stroke="#3b82f6" strokeWidth={1} strokeDasharray="4 3" />}
         </svg>
       )
