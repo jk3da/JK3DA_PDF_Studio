@@ -1,14 +1,5 @@
 import { useRef, useState, type DragEvent, type ReactNode } from 'react'
-import {
-  RotateCcw,
-  RotateCw,
-  Copy,
-  Trash2,
-  FilePlus2,
-  GitMerge,
-  Scissors,
-  FileOutput
-} from 'lucide-react'
+import { Icon } from '../ui/icons'
 import { usePdfStore } from '../../lib/state/store'
 import { pageOps } from '../../lib/pdf/pageOps'
 import Thumbnail from './Thumbnail'
@@ -55,16 +46,16 @@ export default function Sidebar(): JSX.Element {
         <span>Seiten</span>
         <div className="flex items-center gap-0.5">
           <HeaderBtn title="Leerseite nach aktueller" disabled={!hasDoc} onClick={() => void pageOps.insertBlankAfter(currentPage - 1)}>
-            <FilePlus2 size={15} />
+            <Icon name="insert-blank" size={15} />
           </HeaderBtn>
           <HeaderBtn title="PDF anfügen (zusammenführen)" disabled={!hasDoc} onClick={() => void pageOps.mergeFile()}>
-            <GitMerge size={15} />
+            <Icon name="merge" size={15} />
           </HeaderBtn>
           <HeaderBtn title="Aktuelle Seite extrahieren" disabled={!hasDoc} onClick={() => void pageOps.extract([currentPage - 1])}>
-            <FileOutput size={15} />
+            <Icon name="extract" size={15} />
           </HeaderBtn>
           <HeaderBtn title="In Einzelseiten aufteilen" disabled={!hasDoc} onClick={() => void pageOps.splitAll()}>
-            <Scissors size={15} />
+            <Icon name="split" size={15} />
           </HeaderBtn>
         </div>
       </div>
@@ -97,16 +88,16 @@ export default function Sidebar(): JSX.Element {
 
                   <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-black/60 py-1 opacity-0 transition-opacity group-hover:opacity-100">
                     <PageBtn title="Links drehen" onClick={() => void pageOps.rotate(index, -90)}>
-                      <RotateCcw size={14} />
+                      <Icon name="rotate-left" size={14} />
                     </PageBtn>
                     <PageBtn title="Rechts drehen" onClick={() => void pageOps.rotate(index, 90)}>
-                      <RotateCw size={14} />
+                      <Icon name="rotate-right" size={14} />
                     </PageBtn>
                     <PageBtn title="Duplizieren" onClick={() => void pageOps.duplicate(index)}>
-                      <Copy size={14} />
+                      <Icon name="duplicate-page" size={14} />
                     </PageBtn>
                     <PageBtn title="Löschen" danger onClick={() => void pageOps.remove(index)}>
-                      <Trash2 size={14} />
+                      <Icon name="delete-page" size={14} />
                     </PageBtn>
                   </div>
                 </div>

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { usePdfStore } from '../../lib/state/store'
+import { CURSORS } from '../../lib/cursors'
 import {
   annotationBounds,
   moveAnnotation,
@@ -7,6 +8,18 @@ import {
   type BoxAnnotation,
   type DrawAnnotation
 } from '../../lib/annotations/types'
+
+const TOOL_CURSOR: Record<string, string> = {
+  select: CURSORS.select,
+  text: CURSORS.text,
+  draw: CURSORS.freehand,
+  highlight: CURSORS.highlight,
+  rectangle: CURSORS.rectangle,
+  redact: CURSORS.redaction,
+  note: CURSORS.note,
+  stamp: CURSORS.stamp,
+  signature: CURSORS.signature
+}
 
 interface Props {
   pageNumber: number
@@ -198,8 +211,7 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
   }
 
   const editing = editingId ? pageAnnos.find((a) => a.id === editingId) : null
-  const cursor =
-    tool === 'select' ? 'default' : tool === 'text' || tool === 'note' ? 'text' : 'crosshair'
+  const cursor = pending ? 'copy' : (TOOL_CURSOR[tool] ?? 'crosshair')
 
   return (
     <div

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { ShieldAlert } from 'lucide-react'
+import { Icon } from '../ui/icons'
 import Modal from '../ui/Modal'
 import { usePdfStore } from '../../lib/state/store'
 import { readMetadata, writeMetadata, scrubMetadata, type Metadata } from '../../lib/pdf/metadata'
@@ -98,7 +98,7 @@ export default function SecurityModal(): JSX.Element {
 
         {qpdf === false && (
           <div className="flex items-start gap-2 rounded border border-amber-600/50 bg-amber-500/10 p-3 text-sm text-amber-200">
-            <ShieldAlert size={18} className="mt-0.5 shrink-0" />
+            <span className="mt-0.5 shrink-0"><Icon name="error-banner" size={18} /></span>
             <div>
               <b>qpdf.exe fehlt.</b> Lege es unter <code className="text-amber-100">resources/bin/win/qpdf.exe</code> ab,
               dann funktioniert die Verschlüsselung (Neustart der App).

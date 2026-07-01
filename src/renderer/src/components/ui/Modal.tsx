@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { X } from 'lucide-react'
+import { Icon } from './icons'
 
 interface Props {
   title: string
@@ -24,10 +24,10 @@ export default function Modal({ title, onClose, children, width = 480 }: Props):
           <button
             type="button"
             onClick={onClose}
-            className="rounded p-1 text-chrome-500 hover:bg-chrome-700 hover:text-gray-200"
+            className="rounded p-1 text-ink-muted hover:bg-chrome-700 hover:text-ink"
             title="Schließen (Esc)"
           >
-            <X size={16} />
+            <Icon name="close" size={16} />
           </button>
         </div>
         <div className="p-4">{children}</div>

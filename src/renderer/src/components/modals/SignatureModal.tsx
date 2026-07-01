@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
-import { Trash2, Upload, Eraser, Check } from 'lucide-react'
+import { Icon } from '../ui/icons'
 import Modal from '../ui/Modal'
 import { usePdfStore } from '../../lib/state/store'
 import { addSignature, loadSignatures, removeSignature } from '../../lib/signatures'
@@ -116,16 +116,16 @@ export default function SignatureModal(): JSX.Element {
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <button type="button" onClick={clear} className="flex items-center gap-1.5 rounded bg-chrome-700 px-3 py-1.5 text-sm text-gray-200 hover:bg-chrome-600">
-          <Eraser size={15} /> Leeren
+          <Icon name="eraser" size={15} /> Leeren
         </button>
         <button type="button" onClick={saveDrawn} disabled={!hasInk} className="flex items-center gap-1.5 rounded bg-chrome-700 px-3 py-1.5 text-sm text-gray-200 hover:bg-chrome-600 disabled:opacity-40">
           Speichern
         </button>
         <button type="button" onClick={placeDrawn} disabled={!hasInk} className="flex items-center gap-1.5 rounded bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-40">
-          <Check size={15} /> Platzieren
+          <Icon name="signature" size={15} /> Platzieren
         </button>
         <label className="ml-auto flex cursor-pointer items-center gap-1.5 rounded bg-chrome-700 px-3 py-1.5 text-sm text-gray-200 hover:bg-chrome-600">
-          <Upload size={15} /> Bild importieren
+          <Icon name="import-image" size={15} /> Bild importieren
           <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={onImport} />
         </label>
       </div>
@@ -150,7 +150,7 @@ export default function SignatureModal(): JSX.Element {
                   className="absolute -right-1.5 -top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white group-hover:flex"
                   title="Löschen"
                 >
-                  <Trash2 size={11} />
+                  <Icon name="delete" size={12} />
                 </button>
               </div>
             ))}

@@ -4,6 +4,30 @@
 
 :root {
   color-scheme: dark;
+
+  /* Design-Tokens (Spiegel von tailwind.config.js) */
+  --chrome-900: #1b1f24;
+  --chrome-800: #22272e;
+  --chrome-700: #2b313a;
+  --chrome-600: #363d48;
+  --chrome-500: #454d5a;
+  --canvas: #3a3f47;
+  --page: #ffffff;
+  --primary: #3b82f6;
+  --primary-hover: #2f6fe0;
+  --ink: #e5e7eb;
+  --ink-muted: #6b7280;
+  --success: #15a34a;
+  --warning: #f59e0b;
+  --danger: #e11d2a;
+  --annotation: #e11d2a;
+  --highlight: #ffd400;
+  --radius-control: 6px;
+  --radius-panel: 8px;
+  --control-h: 36px;
+  --toolbar-h: 48px;
+  --icon-size: 18px;
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
 html,
