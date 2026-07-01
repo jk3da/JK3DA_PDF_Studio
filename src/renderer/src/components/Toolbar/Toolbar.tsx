@@ -14,10 +14,14 @@ import {
   PenLine,
   Stamp,
   FormInput,
+  RectangleHorizontal,
+  Lock,
+  ShieldCheck,
   type LucideIcon
 } from 'lucide-react'
 import { usePdfStore, type ToolId } from '../../lib/state/store'
 import { saveCurrentDocument } from '../../lib/pdf/save'
+import { applyRedactionToDoc } from '../../lib/pdf/redactApply'
 
 interface ToolDef {
   id: ToolId
@@ -31,6 +35,7 @@ const TOOLS: ToolDef[] = [
   { id: 'draw', label: 'Freihand', icon: Pencil },
   { id: 'highlight', label: 'Markieren', icon: Highlighter },
   { id: 'rectangle', label: 'Rechteck', icon: Square },
+  { id: 'redact', label: 'Schwärzen (markieren)', icon: RectangleHorizontal },
   { id: 'note', label: 'Notiz', icon: StickyNote },
   { id: 'stamp', label: 'Stempel', icon: Stamp }
 ]
@@ -53,6 +58,7 @@ export default function Toolbar({ onOpen }: { onOpen: () => void }): JSX.Element
   const canRedo = usePdfStore((s) => s.future.length > 0)
   const dirty = usePdfStore((s) => s.dirty)
   const setModal = usePdfStore((s) => s.setModal)
+  const hasRedactMarks = usePdfStore((s) => s.annotations.some((a) => a.type === 'redact'))
 
   return (
     <div className="flex h-12 shrink-0 items-center gap-1 border-b border-chrome-700 bg-chrome-800 px-2 text-chrome-100">
@@ -142,6 +148,25 @@ export default function Toolbar({ onOpen }: { onOpen: () => void }): JSX.Element
       >
         <FormInput size={18} />
       </button>
+      <button
+        type="button"
+        onClick={() => setModal('security')}
+        disabled={!hasDoc}
+        title="Sicherheit & Metadaten"
+        className="flex h-9 w-9 items-center justify-center rounded text-gray-200 hover:bg-chrome-700 disabled:opacity-40"
+      >
+        <Lock size={18} />
+      </button>
+      {hasRedactMarks && (
+        <button
+          type="button"
+          onClick={() => void applyRedactionToDoc()}
+          title="Markierte Schwärzungen dauerhaft anwenden"
+          className="flex h-9 items-center gap-1.5 rounded bg-red-700 px-2.5 text-sm text-white hover:bg-red-600"
+        >
+          <ShieldCheck size={16} /> Schwärzen
+        </button>
+      )}
 
       <div className="mx-1 h-6 w-px bg-chrome-600" />
 

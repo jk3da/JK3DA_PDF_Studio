@@ -2,13 +2,14 @@ import { create } from 'zustand'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import type { Annotation, PendingPlacement } from '../annotations/types'
 
-export type ModalId = 'signature' | 'forms'
+export type ModalId = 'signature' | 'forms' | 'security'
 
 export type ToolId =
   | 'select'
   | 'text'
   | 'highlight'
   | 'rectangle'
+  | 'redact'
   | 'note'
   | 'draw'
   | 'signature'
@@ -46,6 +47,8 @@ interface PdfState {
 
   setDocument: (bytes: Uint8Array, name: string, path?: string | null) => void
   replaceBytes: (bytes: Uint8Array, name?: string, path?: string | null) => void
+  /** Bytes ersetzen, aber Annotationen/History behalten (z. B. Metadaten). */
+  patchBytes: (bytes: Uint8Array) => void
   closeDocument: () => void
   setDoc: (doc: PDFDocumentProxy | null) => void
   setNumPages: (n: number) => void
@@ -118,6 +121,7 @@ export const usePdfStore = create<PdfState>((set, get) => ({
       future: [],
       dirty: false
     })),
+  patchBytes: (bytes) => set({ bytes, doc: null, dirty: true }),
   closeDocument: () =>
     set({
       bytes: null,

@@ -8,6 +8,7 @@ import { createWelcomePdf } from './lib/pdf/sample'
 import { saveCurrentDocument } from './lib/pdf/save'
 import SignatureModal from './components/modals/SignatureModal'
 import FormsModal from './components/modals/FormsModal'
+import SecurityModal from './components/modals/SecurityModal'
 
 export default function App(): JSX.Element {
   const setDocument = usePdfStore((s) => s.setDocument)
@@ -112,6 +113,7 @@ export default function App(): JSX.Element {
 
       {modal === 'signature' && <SignatureModal />}
       {modal === 'forms' && <FormsModal />}
+      {modal === 'security' && <SecurityModal />}
     </div>
   )
 }

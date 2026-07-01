@@ -28,11 +28,29 @@ export interface BatchFile {
   bytes: Uint8Array
 }
 
+/** Berechtigungen für die Verschlüsselung. */
+export interface EncryptPermissions {
+  print: boolean
+  modify: boolean
+  copy: boolean
+}
+
+export interface EncryptRequest {
+  bytes: Uint8Array
+  userPassword: string
+  ownerPassword: string
+  permissions: EncryptPermissions
+}
+
+export type EncryptResult = { ok: true; bytes: Uint8Array } | { ok: false; error: string }
+
 /** IPC-Kanalnamen zentral, damit Main und Preload sich nicht vertippen. */
 export const IPC = {
   openPdf: 'dialog:openPdf',
   savePdf: 'dialog:savePdf',
   savePdfBatch: 'dialog:savePdfBatch',
+  toolAvailable: 'sidecar:toolAvailable',
+  encryptPdf: 'sidecar:encryptPdf',
   ping: 'app:ping',
   getVersion: 'app:getVersion'
 } as const

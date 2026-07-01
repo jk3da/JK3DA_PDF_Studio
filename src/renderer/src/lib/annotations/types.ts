@@ -9,6 +9,7 @@ export type AnnotationType =
   | 'text'
   | 'highlight'
   | 'rect'
+  | 'redact'
   | 'note'
   | 'draw'
   | 'signature'
@@ -39,7 +40,7 @@ export interface NoteAnnotation {
 export interface BoxAnnotation {
   id: string
   page: number
-  type: 'highlight' | 'rect'
+  type: 'highlight' | 'rect' | 'redact'
   x: number
   y: number
   w: number
@@ -101,6 +102,7 @@ export function annotationBounds(a: Annotation): { x: number; y: number; w: numb
       return { x: a.x, y: a.y, w: 22, h: 22 }
     case 'highlight':
     case 'rect':
+    case 'redact':
     case 'stamp':
     case 'image':
       return { x: a.x, y: a.y, w: a.w, h: a.h }
@@ -125,6 +127,7 @@ export function moveAnnotation(a: Annotation, dx: number, dy: number): Annotatio
     case 'note':
     case 'highlight':
     case 'rect':
+    case 'redact':
     case 'stamp':
     case 'image':
       return { ...a, x: a.x + dx, y: a.y + dy }

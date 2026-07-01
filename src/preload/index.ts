@@ -1,5 +1,13 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import { IPC, type OpenedPdf, type SavedPdf, type SavedBatch, type BatchFile } from '../shared/types'
+import {
+  IPC,
+  type OpenedPdf,
+  type SavedPdf,
+  type SavedBatch,
+  type BatchFile,
+  type EncryptRequest,
+  type EncryptResult
+} from '../shared/types'
 
 /**
  * Sichere, minimale API für den Renderer. Kein direkter Node-/IPC-Zugriff;
@@ -14,6 +22,11 @@ const api = {
   /** Wählt einen Zielordner und schreibt mehrere PDFs (z. B. Aufteilen). */
   savePdfBatch: (files: BatchFile[]): Promise<SavedBatch | null> =>
     ipcRenderer.invoke(IPC.savePdfBatch, { files }),
+  /** Prüft, ob ein natives Sidecar (z. B. "qpdf") vorhanden ist. */
+  toolAvailable: (name: string): Promise<boolean> => ipcRenderer.invoke(IPC.toolAvailable, name),
+  /** Verschlüsselt das PDF via qpdf (falls vorhanden). */
+  encryptPdf: (req: EncryptRequest): Promise<EncryptResult> =>
+    ipcRenderer.invoke(IPC.encryptPdf, req),
   /** Healthcheck-Roundtrip Renderer -> Main -> Renderer. */
   ping: (): Promise<string> => ipcRenderer.invoke(IPC.ping),
   /** App-Version aus dem Main-Prozess. */

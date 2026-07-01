@@ -1,7 +1,18 @@
 import { app, BrowserWindow, ipcMain, dialog, shell } from 'electron'
 import { join, basename } from 'node:path'
-import { readFile, writeFile } from 'node:fs/promises'
-import { IPC, type OpenedPdf, type SavedPdf, type SavedBatch, type BatchFile } from '../shared/types'
+import { readFile, writeFile, rm } from 'node:fs/promises'
+import { existsSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import {
+  IPC,
+  type OpenedPdf,
+  type SavedPdf,
+  type SavedBatch,
+  type BatchFile,
+  type EncryptRequest,
+  type EncryptResult
+} from '../shared/types'
+import { toolAvailable, runBinary } from './sidecars'
 
 const isDev = !!process.env['ELECTRON_RENDERER_URL']
 
@@ -92,6 +103,45 @@ function registerIpc(): void {
       return { dir, count: payload.files.length }
     }
   )
+
+  // Ist ein natives Sidecar (qpdf, gswin64c, tesseract, …) vorhanden?
+  ipcMain.handle(IPC.toolAvailable, (_e, name: string): boolean => toolAvailable(name))
+
+  // Verschlüsselung/Passwort/Berechtigungen via qpdf.
+  ipcMain.handle(IPC.encryptPdf, async (_e, req: EncryptRequest): Promise<EncryptResult> => {
+    if (!toolAvailable('qpdf')) return { ok: false, error: 'qpdf-missing' }
+    const stamp = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`
+    const inPath = join(tmpdir(), `jk3da-in-${stamp}.pdf`)
+    const outPath = join(tmpdir(), `jk3da-out-${stamp}.pdf`)
+    try {
+      await writeFile(inPath, Buffer.from(req.bytes))
+      const user = req.userPassword ?? ''
+      const owner = req.ownerPassword || req.userPassword || ''
+      const { print, modify, copy } = req.permissions
+      const args = [
+        '--encrypt',
+        user,
+        owner,
+        '256',
+        `--print=${print ? 'full' : 'none'}`,
+        `--modify=${modify ? 'all' : 'none'}`,
+        `--extract=${copy ? 'y' : 'n'}`,
+        '--',
+        inPath,
+        outPath
+      ]
+      const res = await runBinary('qpdf', args)
+      // qpdf: 0 = ok, 3 = ok mit Warnungen.
+      if (!existsSync(outPath)) return { ok: false, error: res.stderr || `qpdf exit ${res.code}` }
+      const out = await readFile(outPath)
+      return { ok: true, bytes: new Uint8Array(out) }
+    } catch (e) {
+      return { ok: false, error: e instanceof Error ? e.message : String(e) }
+    } finally {
+      await rm(inPath, { force: true }).catch(() => undefined)
+      await rm(outPath, { force: true }).catch(() => undefined)
+    }
+  })
 }
 
 app.whenReady().then(() => {

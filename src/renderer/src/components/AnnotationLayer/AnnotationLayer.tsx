@@ -253,18 +253,9 @@ function makeBoxDraft(
   if (tool === 'stamp') {
     return { id: 'draft', page, type: 'stamp', x, y, w, h, label: 'GENEHMIGT', color } as Annotation
   }
-  const type = tool === 'highlight' ? 'highlight' : 'rect'
-  return {
-    id: 'draft',
-    page,
-    type,
-    x,
-    y,
-    w,
-    h,
-    color: type === 'highlight' ? HIGHLIGHT_COLOR : color,
-    strokeWidth: 2
-  }
+  const type = tool === 'highlight' ? 'highlight' : tool === 'redact' ? 'redact' : 'rect'
+  const boxColor = type === 'highlight' ? HIGHLIGHT_COLOR : type === 'redact' ? '#111111' : color
+  return { id: 'draft', page, type, x, y, w, h, color: boxColor, strokeWidth: 2 }
 }
 
 interface ViewProps {
@@ -291,6 +282,14 @@ function AnnotationView({ a, zoom, selected, hidden }: ViewProps): JSX.Element |
         <div
           className="absolute"
           style={{ left: a.x * zoom, top: a.y * zoom, width: a.w * zoom, height: a.h * zoom, border: `${a.strokeWidth * zoom}px solid ${a.color}`, ...ring }}
+        />
+      )
+    case 'redact':
+      return (
+        <div
+          className="absolute"
+          style={{ left: a.x * zoom, top: a.y * zoom, width: a.w * zoom, height: a.h * zoom, background: 'rgba(10,10,10,0.82)', border: '1.5px solid #e11d2a', ...ring }}
+          title="Schwärzung (anwenden macht Inhalt unwiderruflich unlesbar)"
         />
       )
     case 'stamp':
