@@ -1,16 +1,24 @@
-import { useRef, useState, type DragEvent, type ReactNode } from 'react'
+import { useRef, useState, type DragEvent } from 'react'
 import { Icon } from '../ui/icons'
-import { usePdfStore } from '../../lib/state/store'
+import { usePdfStore, type LeftTab } from '../../lib/state/store'
 import { pageOps } from '../../lib/pdf/pageOps'
 import Thumbnail from './Thumbnail'
 
 const THUMB_W = 150
+
+const TABS: { id: LeftTab; label: string; icon: string }[] = [
+  { id: 'thumbnails', label: 'Miniaturansichten', icon: 'panel-thumbnails' },
+  { id: 'bookmarks', label: 'Lesezeichen', icon: 'panel-bookmarks' },
+  { id: 'outline', label: 'Gliederung', icon: 'outline-toc' }
+]
 
 export default function Sidebar(): JSX.Element {
   const doc = usePdfStore((s) => s.doc)
   const numPages = usePdfStore((s) => s.numPages)
   const currentPage = usePdfStore((s) => s.currentPage)
   const hasDoc = usePdfStore((s) => s.bytes !== null)
+  const leftTab = usePdfStore((s) => s.leftTab)
+  const setLeftTab = usePdfStore((s) => s.setLeftTab)
 
   const dragFrom = useRef<number | null>(null)
   const [dragOver, setDragOver] = useState<number | null>(null)
@@ -41,111 +49,90 @@ export default function Sidebar(): JSX.Element {
   }
 
   return (
-    <aside className="flex w-[200px] shrink-0 flex-col border-r border-chrome-700 bg-chrome-800">
-      <div className="flex h-9 shrink-0 items-center justify-between px-3 text-xs font-semibold uppercase tracking-wide text-chrome-500">
-        <span>Seiten</span>
-        <div className="flex items-center gap-0.5">
-          <HeaderBtn title="Leerseite nach aktueller" disabled={!hasDoc} onClick={() => void pageOps.insertBlankAfter(currentPage - 1)}>
-            <Icon name="insert-blank" size={15} />
-          </HeaderBtn>
-          <HeaderBtn title="PDF anfügen (zusammenführen)" disabled={!hasDoc} onClick={() => void pageOps.mergeFile()}>
-            <Icon name="merge" size={15} />
-          </HeaderBtn>
-          <HeaderBtn title="Aktuelle Seite extrahieren" disabled={!hasDoc} onClick={() => void pageOps.extract([currentPage - 1])}>
-            <Icon name="extract" size={15} />
-          </HeaderBtn>
-          <HeaderBtn title="In Einzelseiten aufteilen" disabled={!hasDoc} onClick={() => void pageOps.splitAll()}>
-            <Icon name="split" size={15} />
-          </HeaderBtn>
-        </div>
+    <aside className="flex w-[214px] shrink-0 flex-col border-r border-chrome-600 bg-chrome-800">
+      <div className="flex h-[38px] items-center gap-0.5 border-b border-chrome-600 px-1.5">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setLeftTab(t.id)}
+            title={t.label}
+            className={`grid h-7 w-[34px] place-items-center rounded-[5px] ${leftTab === t.id ? 'bg-primary/15 text-primary' : 'text-ink-muted hover:text-ink'}`}
+          >
+            <Icon name={t.icon} size={17} />
+          </button>
+        ))}
+        <div className="flex-1" />
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-muted">Seiten</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 pb-3">
-        {!hasDoc && <p className="px-2 py-4 text-sm text-chrome-500">Kein Dokument geöffnet.</p>}
+      {leftTab === 'thumbnails' && (
+        <>
+          <div className="flex items-center gap-0.5 border-b border-chrome-700 px-2 py-1">
+            <PageAction title="Leerseite nach aktueller" icon="insert-blank" disabled={!hasDoc} onClick={() => void pageOps.insertBlankAfter(currentPage - 1)} />
+            <PageAction title="PDF anfügen" icon="merge" disabled={!hasDoc} onClick={() => void pageOps.mergeFile()} />
+            <PageAction title="Aktuelle Seite extrahieren" icon="extract" disabled={!hasDoc} onClick={() => void pageOps.extract([currentPage - 1])} />
+            <PageAction title="In Einzelseiten aufteilen" icon="split" disabled={!hasDoc} onClick={() => void pageOps.splitAll()} />
+          </div>
 
-        {doc &&
-          Array.from({ length: numPages }, (_, i) => i + 1).map((page) => {
-            const index = page - 1
-            const active = page === currentPage
-            const isOver = dragOver === index
-            return (
-              <div
-                key={page}
-                draggable
-                onDragStart={onDragStart(index)}
-                onDragOver={onDragOver(index)}
-                onDrop={onDrop(index)}
-                onDragEnd={onDragEnd}
-                onClick={() => goTo(page)}
-                className={[
-                  'group relative mb-3 cursor-pointer rounded border p-1 transition-colors',
-                  active ? 'border-accent bg-accent/10' : 'border-transparent hover:border-chrome-600',
-                  isOver ? 'ring-2 ring-accent' : ''
-                ].join(' ')}
-              >
-                <div className="relative mx-auto w-fit overflow-hidden rounded-sm shadow">
-                  <Thumbnail pdf={doc} pageNumber={page} width={THUMB_W} />
-
-                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-black/60 py-1 opacity-0 transition-opacity group-hover:opacity-100">
-                    <PageBtn title="Links drehen" onClick={() => void pageOps.rotate(index, -90)}>
-                      <Icon name="rotate-left" size={14} />
-                    </PageBtn>
-                    <PageBtn title="Rechts drehen" onClick={() => void pageOps.rotate(index, 90)}>
-                      <Icon name="rotate-right" size={14} />
-                    </PageBtn>
-                    <PageBtn title="Duplizieren" onClick={() => void pageOps.duplicate(index)}>
-                      <Icon name="duplicate-page" size={14} />
-                    </PageBtn>
-                    <PageBtn title="Löschen" danger onClick={() => void pageOps.remove(index)}>
-                      <Icon name="delete-page" size={14} />
-                    </PageBtn>
+          <div className="flex-1 overflow-y-auto px-2 pb-3">
+            {!hasDoc && <p className="px-2 py-4 text-ui text-ink-muted">Kein Dokument geöffnet.</p>}
+            {doc &&
+              Array.from({ length: numPages }, (_, i) => i + 1).map((page) => {
+                const index = page - 1
+                const active = page === currentPage
+                const isOver = dragOver === index
+                return (
+                  <div
+                    key={page}
+                    draggable
+                    onDragStart={onDragStart(index)}
+                    onDragOver={onDragOver(index)}
+                    onDrop={onDrop(index)}
+                    onDragEnd={onDragEnd}
+                    onClick={() => goTo(page)}
+                    className={[
+                      'group relative mb-3 cursor-pointer rounded border p-1 transition-colors',
+                      active ? 'border-primary bg-primary/10' : 'border-transparent hover:border-chrome-600',
+                      isOver ? 'ring ring-primary' : ''
+                    ].join(' ')}
+                  >
+                    <div className="relative mx-auto w-fit overflow-hidden rounded-sm shadow">
+                      <Thumbnail pdf={doc} pageNumber={page} width={THUMB_W} />
+                      <div className="absolute inset-x-0 bottom-0 flex items-center justify-center gap-1 bg-black/60 py-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <PageBtn title="Links drehen" icon="rotate-left" onClick={() => void pageOps.rotate(index, -90)} />
+                        <PageBtn title="Rechts drehen" icon="rotate-right" onClick={() => void pageOps.rotate(index, 90)} />
+                        <PageBtn title="Duplizieren" icon="duplicate-page" onClick={() => void pageOps.duplicate(index)} />
+                        <PageBtn title="Löschen" icon="delete-page" danger onClick={() => void pageOps.remove(index)} />
+                      </div>
+                    </div>
+                    <div className={`mt-1 text-center text-[11px] ${active ? 'font-semibold text-ink' : 'text-ink-muted'}`}>{page}</div>
                   </div>
-                </div>
+                )
+              })}
+          </div>
+        </>
+      )}
 
-                <div className="mt-1 text-center text-xs text-chrome-500">{page}</div>
-              </div>
-            )
-          })}
-      </div>
+      {leftTab === 'bookmarks' && <Placeholder text="Keine Lesezeichen." />}
+      {leftTab === 'outline' && <Placeholder text="Keine Gliederung." />}
     </aside>
   )
 }
 
-function HeaderBtn({
-  title,
-  disabled,
-  onClick,
-  children
-}: {
-  title: string
-  disabled?: boolean
-  onClick: () => void
-  children: ReactNode
-}): JSX.Element {
+function Placeholder({ text }: { text: string }): JSX.Element {
+  return <div className="flex-1 p-4 text-ui text-ink-muted">{text}</div>
+}
+
+function PageAction({ title, icon, disabled, onClick }: { title: string; icon: string; disabled?: boolean; onClick: () => void }): JSX.Element {
   return (
-    <button
-      type="button"
-      title={title}
-      disabled={disabled}
-      onClick={onClick}
-      className="flex h-6 w-6 items-center justify-center rounded text-gray-300 hover:bg-chrome-700 disabled:opacity-30"
-    >
-      {children}
+    <button type="button" title={title} disabled={disabled} onClick={onClick} className="grid h-6 w-6 place-items-center rounded text-ink-muted hover:bg-chrome-700 hover:text-ink disabled:opacity-30">
+      <Icon name={icon} size={15} />
     </button>
   )
 }
 
-function PageBtn({
-  title,
-  danger,
-  onClick,
-  children
-}: {
-  title: string
-  danger?: boolean
-  onClick: () => void
-  children: ReactNode
-}): JSX.Element {
+function PageBtn({ title, icon, danger, onClick }: { title: string; icon: string; danger?: boolean; onClick: () => void }): JSX.Element {
   return (
     <button
       type="button"
@@ -154,12 +141,9 @@ function PageBtn({
         e.stopPropagation()
         onClick()
       }}
-      className={[
-        'flex h-6 w-6 items-center justify-center rounded text-white',
-        danger ? 'hover:bg-red-600' : 'hover:bg-accent'
-      ].join(' ')}
+      className={`grid h-6 w-6 place-items-center rounded text-white ${danger ? 'hover:bg-danger' : 'hover:bg-primary'}`}
     >
-      {children}
+      <Icon name={icon} size={14} />
     </button>
   )
 }

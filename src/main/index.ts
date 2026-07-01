@@ -23,6 +23,7 @@ function createWindow(): void {
     minWidth: 960,
     minHeight: 620,
     show: false,
+    frame: false,
     autoHideMenuBar: true,
     backgroundColor: '#1b1f24',
     title: 'JK3DA PDF Studio',
@@ -53,6 +54,24 @@ function registerIpc(): void {
   ipcMain.handle(IPC.ping, () => 'pong')
 
   ipcMain.handle(IPC.getVersion, () => app.getVersion())
+
+  // Fenster-Steuerung (rahmenloses Fenster -> eigene Titelleiste).
+  ipcMain.handle(IPC.winMinimize, (e) => BrowserWindow.fromWebContents(e.sender)?.minimize())
+  ipcMain.handle(IPC.winClose, (e) => BrowserWindow.fromWebContents(e.sender)?.close())
+  ipcMain.handle(IPC.winMaximizeToggle, (e) => {
+    const w = BrowserWindow.fromWebContents(e.sender)
+    if (!w) return false
+    if (w.isMaximized()) w.unmaximize()
+    else w.maximize()
+    return w.isMaximized()
+  })
+  ipcMain.handle(IPC.winIsMaximized, (e) => BrowserWindow.fromWebContents(e.sender)?.isMaximized() ?? false)
+  ipcMain.handle(IPC.toggleFullscreen, (e) => {
+    const w = BrowserWindow.fromWebContents(e.sender)
+    if (!w) return false
+    w.setFullScreen(!w.isFullScreen())
+    return w.isFullScreen()
+  })
 
   ipcMain.handle(IPC.openPdf, async (): Promise<OpenedPdf | null> => {
     const { canceled, filePaths } = await dialog.showOpenDialog({

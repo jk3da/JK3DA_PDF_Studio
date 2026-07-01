@@ -66,9 +66,7 @@ export default function PdfPage({ pdf, pageNumber, zoom }: Props): JSX.Element {
       style={{ width: wPx, height: hPx }}
     >
       <canvas ref={canvasRef} className="block" style={{ width: wPx, height: hPx }} />
-      {base && (
-        <AnnotationLayer pageNumber={pageNumber} baseWidth={base.w} baseHeight={base.h} zoom={zoom} />
-      )}
+      {base && <AnnotationLayer pageNumber={pageNumber} baseWidth={base.w} zoom={zoom} />}
     </div>
   )
 }

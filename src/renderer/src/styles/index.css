@@ -43,6 +43,14 @@ body {
   user-select: none;
 }
 
+/* Eigene Titelleiste: Ziehbereich + interaktive Ausnahmen */
+.app-drag {
+  -webkit-app-region: drag;
+}
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}
+
 /* Schlanke, dunkle Scrollbars passend zum App-Chrome */
 ::-webkit-scrollbar {
   width: 12px;

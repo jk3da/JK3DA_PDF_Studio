@@ -51,6 +51,11 @@ export const IPC = {
   savePdfBatch: 'dialog:savePdfBatch',
   toolAvailable: 'sidecar:toolAvailable',
   encryptPdf: 'sidecar:encryptPdf',
+  winMinimize: 'win:minimize',
+  winMaximizeToggle: 'win:maximizeToggle',
+  winClose: 'win:close',
+  winIsMaximized: 'win:isMaximized',
+  toggleFullscreen: 'win:toggleFullscreen',
   ping: 'app:ping',
   getVersion: 'app:getVersion'
 } as const

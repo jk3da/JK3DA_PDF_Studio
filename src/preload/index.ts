@@ -27,6 +27,12 @@ const api = {
   /** Verschlüsselt das PDF via qpdf (falls vorhanden). */
   encryptPdf: (req: EncryptRequest): Promise<EncryptResult> =>
     ipcRenderer.invoke(IPC.encryptPdf, req),
+  /** Fenster-Steuerung (eigene Titelleiste). */
+  winMinimize: (): Promise<void> => ipcRenderer.invoke(IPC.winMinimize),
+  winMaximizeToggle: (): Promise<boolean> => ipcRenderer.invoke(IPC.winMaximizeToggle),
+  winClose: (): Promise<void> => ipcRenderer.invoke(IPC.winClose),
+  winIsMaximized: (): Promise<boolean> => ipcRenderer.invoke(IPC.winIsMaximized),
+  toggleFullscreen: (): Promise<boolean> => ipcRenderer.invoke(IPC.toggleFullscreen),
   /** Healthcheck-Roundtrip Renderer -> Main -> Renderer. */
   ping: (): Promise<string> => ipcRenderer.invoke(IPC.ping),
   /** App-Version aus dem Main-Prozess. */

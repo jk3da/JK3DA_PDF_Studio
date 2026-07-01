@@ -13,6 +13,8 @@ export type AnnotationType =
   | 'note'
   | 'draw'
   | 'signature'
+  | 'line'
+  | 'ellipse'
   | 'stamp'
   | 'image'
 
@@ -47,6 +49,35 @@ export interface BoxAnnotation {
   h: number
   color: string
   strokeWidth: number
+  opacity?: number
+}
+
+export interface EllipseAnnotation {
+  id: string
+  page: number
+  type: 'ellipse'
+  x: number
+  y: number
+  w: number
+  h: number
+  color: string
+  strokeWidth: number
+  opacity?: number
+}
+
+export interface LineAnnotation {
+  id: string
+  page: number
+  type: 'line'
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  color: string
+  strokeWidth: number
+  /** Pfeilspitze am Endpunkt. */
+  arrow?: boolean
+  opacity?: number
 }
 
 export interface DrawAnnotation {
@@ -56,6 +87,7 @@ export interface DrawAnnotation {
   points: Array<{ x: number; y: number }>
   color: string
   strokeWidth: number
+  opacity?: number
 }
 
 export interface StampAnnotation {
@@ -86,6 +118,8 @@ export type Annotation =
   | TextAnnotation
   | NoteAnnotation
   | BoxAnnotation
+  | EllipseAnnotation
+  | LineAnnotation
   | DrawAnnotation
   | StampAnnotation
   | ImageAnnotation
@@ -105,7 +139,13 @@ export function annotationBounds(a: Annotation): { x: number; y: number; w: numb
     case 'redact':
     case 'stamp':
     case 'image':
+    case 'ellipse':
       return { x: a.x, y: a.y, w: a.w, h: a.h }
+    case 'line': {
+      const x = Math.min(a.x1, a.x2)
+      const y = Math.min(a.y1, a.y2)
+      return { x, y, w: Math.abs(a.x2 - a.x1), h: Math.abs(a.y2 - a.y1) }
+    }
     case 'draw':
     case 'signature': {
       const xs = a.points.map((p) => p.x)
@@ -123,6 +163,8 @@ export function moveAnnotation(a: Annotation, dx: number, dy: number): Annotatio
     case 'draw':
     case 'signature':
       return { ...a, points: a.points.map((p) => ({ x: p.x + dx, y: p.y + dy })) }
+    case 'line':
+      return { ...a, x1: a.x1 + dx, y1: a.y1 + dy, x2: a.x2 + dx, y2: a.y2 + dy }
     case 'text':
     case 'note':
     case 'highlight':
@@ -130,6 +172,7 @@ export function moveAnnotation(a: Annotation, dx: number, dy: number): Annotatio
     case 'redact':
     case 'stamp':
     case 'image':
+    case 'ellipse':
       return { ...a, x: a.x + dx, y: a.y + dy }
   }
 }

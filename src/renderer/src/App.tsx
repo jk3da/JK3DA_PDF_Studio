@@ -1,7 +1,12 @@
 import { useCallback, useEffect } from 'react'
-import Toolbar from './components/Toolbar/Toolbar'
+import { Icon } from './components/ui/icons'
+import TitleBar from './components/shell/TitleBar'
+import TopToolbar from './components/shell/TopToolbar'
+import FormatBar from './components/shell/FormatBar'
+import ToolRail from './components/shell/ToolRail'
 import Sidebar from './components/Sidebar/Sidebar'
 import PdfCanvas from './components/PdfCanvas/PdfCanvas'
+import PropertiesPanel from './components/shell/PropertiesPanel'
 import StatusBar from './components/StatusBar/StatusBar'
 import { usePdfStore } from './lib/state/store'
 import { createWelcomePdf } from './lib/pdf/sample'
@@ -16,18 +21,18 @@ export default function App(): JSX.Element {
   const hasDoc = usePdfStore((s) => s.bytes !== null)
   const modal = usePdfStore((s) => s.modal)
   const pending = usePdfStore((s) => s.pending)
+  const tool = usePdfStore((s) => s.tool)
+  const selectedId = usePdfStore((s) => s.selectedId)
+  const currentPage = usePdfStore((s) => s.currentPage)
+  const numPages = usePdfStore((s) => s.numPages)
 
   const handleOpen = useCallback(async () => {
     setStatus('Öffne Datei …')
     const result = await window.jk3da.openPdf()
-    if (result) {
-      setDocument(result.bytes, result.name, result.path)
-    } else {
-      setStatus('Bereit')
-    }
+    if (result) setDocument(result.bytes, result.name, result.path)
+    else setStatus('Bereit')
   }, [setDocument, setStatus])
 
-  // Sofort sichtbarer Render-Test: Willkommens-PDF beim Start laden.
   useEffect(() => {
     let cancelled = false
     createWelcomePdf()
@@ -42,7 +47,6 @@ export default function App(): JSX.Element {
     }
   }, [setDocument, setStatus])
 
-  // Globale Tastenkürzel.
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       const ctrl = e.ctrlKey || e.metaKey
@@ -79,37 +83,51 @@ export default function App(): JSX.Element {
     return () => window.removeEventListener('keydown', onKey)
   }, [handleOpen])
 
+  const showFormatBar = (tool !== 'select' && tool !== 'hand') || selectedId !== null
+
   return (
-    <div className="relative flex h-full w-full flex-col bg-chrome-900 font-sans text-gray-100">
-      <Toolbar onOpen={handleOpen} />
+    <div className="flex h-full w-full flex-col bg-chrome-900 font-sans text-ink">
+      <TitleBar onOpen={handleOpen} />
+      <TopToolbar onOpen={handleOpen} />
+      {showFormatBar && <FormatBar />}
+
       <div className="flex min-h-0 flex-1">
+        <ToolRail />
         <Sidebar />
-        <main className="min-w-0 flex-1">
+        <main className="relative min-w-0 flex-1 bg-canvas">
           {hasDoc ? (
             <PdfCanvas />
           ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-4 bg-canvas text-chrome-500">
-              <p>Kein Dokument geöffnet.</p>
-              <button
-                type="button"
-                onClick={handleOpen}
-                className="rounded bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover"
-              >
-                PDF öffnen
-              </button>
+            <div className="flex h-full items-center justify-center p-6">
+              <div className="flex flex-col items-center gap-2 rounded-panel border-2 border-dashed border-chrome-500 p-10 text-center">
+                <span className="grid h-14 w-14 place-items-center rounded-full bg-chrome-700 text-ink-muted"><Icon name="open" size={26} /></span>
+                <p className="text-ui-lg font-semibold text-ink">Kein Dokument geöffnet</p>
+                <p className="max-w-[36ch] text-ui text-ink-muted">Öffne eine PDF-Datei, um zu beginnen.</p>
+                <button type="button" onClick={handleOpen} className="mt-1.5 inline-flex h-9 items-center gap-2 rounded-control bg-primary px-3.5 text-ui font-semibold text-white hover:bg-primary-hover">
+                  <Icon name="open" size={16} /> Datei öffnen
+                </button>
+              </div>
+            </div>
+          )}
+
+          {pending && (
+            <div className="pointer-events-none absolute inset-x-0 top-3 z-40 flex justify-center">
+              <span className="rounded-full bg-primary px-3 py-1 text-ui-sm font-medium text-white shadow-lg">
+                Auf die Seite klicken zum Platzieren · Esc bricht ab
+              </span>
+            </div>
+          )}
+
+          {hasDoc && (
+            <div className="pointer-events-none absolute bottom-4 left-1/2 z-30 flex -translate-x-1/2 items-center gap-2 rounded-panel border border-chrome-600 bg-chrome-900/90 px-3 py-1.5 text-ui-sm text-[#c8ccd2] backdrop-blur">
+              <Icon name="hand-pan" size={15} /> Seite {currentPage} von {numPages}
             </div>
           )}
         </main>
+        <PropertiesPanel />
       </div>
-      <StatusBar />
 
-      {pending && (
-        <div className="pointer-events-none absolute inset-x-0 top-14 z-40 flex justify-center">
-          <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-white shadow-lg">
-            Auf die Seite klicken zum Platzieren · Esc bricht ab
-          </span>
-        </div>
-      )}
+      <StatusBar />
 
       {modal === 'signature' && <SignatureModal />}
       {modal === 'forms' && <FormsModal />}

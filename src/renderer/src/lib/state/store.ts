@@ -1,19 +1,26 @@
 import { create } from 'zustand'
 import type { PDFDocumentProxy } from 'pdfjs-dist'
-import type { Annotation, PendingPlacement } from '../annotations/types'
+import { moveAnnotation, type Annotation, type PendingPlacement } from '../annotations/types'
 
 export type ModalId = 'signature' | 'forms' | 'security'
 
 export type ToolId =
   | 'select'
+  | 'hand'
   | 'text'
+  | 'draw'
   | 'highlight'
+  | 'line'
+  | 'arrow'
   | 'rectangle'
+  | 'ellipse'
   | 'redact'
   | 'note'
-  | 'draw'
-  | 'signature'
   | 'stamp'
+
+export type LeftTab = 'thumbnails' | 'bookmarks' | 'outline'
+export type RightTab = 'properties' | 'comments'
+export type LayoutMode = 'single' | 'continuous' | 'spread'
 
 export const MIN_ZOOM = 0.25
 export const MAX_ZOOM = 4
@@ -21,6 +28,10 @@ export const HISTORY_LIMIT = 60
 
 const clampZoom = (z: number): number => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z))
 const clone = (a: Annotation[]): Annotation[] => JSON.parse(JSON.stringify(a)) as Annotation[]
+const genId = (): string =>
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto
+    ? crypto.randomUUID()
+    : `a-${Date.now()}-${Math.round(Math.random() * 1e6)}`
 
 interface PdfState {
   bytes: Uint8Array | null
@@ -38,12 +49,24 @@ interface PdfState {
   annotations: Annotation[]
   selectedId: string | null
   currentColor: string
+  currentStrokeWidth: number
+  currentOpacity: number
+  currentFontSize: number
   past: Annotation[][]
   future: Annotation[][]
   /** Wartet auf Platzierung per Klick (z. B. Signatur/Bild). */
   pending: PendingPlacement | null
   /** Aktuell offener modaler Dialog. */
   modal: ModalId | null
+  /** UI-Zustand für Panels/Layout/Suche. */
+  leftTab: LeftTab
+  rightTab: RightTab
+  layoutMode: LayoutMode
+  searchQuery: string
+  /** Größe der ersten Seite in PDF-Punkten (für Statusleiste/Fit). */
+  pageSize: { w: number; h: number } | null
+  /** Anforderung an den Canvas, den Zoom einzupassen. */
+  fitRequest: 'width' | 'page' | null
 
   setDocument: (bytes: Uint8Array, name: string, path?: string | null) => void
   replaceBytes: (bytes: Uint8Array, name?: string, path?: string | null) => void
@@ -67,11 +90,23 @@ interface PdfState {
   updateAnnotation: (id: string, patch: Partial<Annotation>) => void
   removeAnnotation: (id: string) => void
   selectAnnotation: (id: string | null) => void
+  duplicateAnnotation: (id: string) => void
+  bringToFront: (id: string) => void
+  sendToBack: (id: string) => void
   clearAnnotations: () => void
   undo: () => void
   redo: () => void
   setPending: (p: PendingPlacement | null) => void
   setModal: (m: ModalId | null) => void
+  setCurrentStrokeWidth: (n: number) => void
+  setCurrentOpacity: (n: number) => void
+  setCurrentFontSize: (n: number) => void
+  setLeftTab: (t: LeftTab) => void
+  setRightTab: (t: RightTab) => void
+  setLayoutMode: (m: LayoutMode) => void
+  setSearchQuery: (q: string) => void
+  setPageSize: (s: { w: number; h: number } | null) => void
+  requestFit: (m: 'width' | 'page' | null) => void
 }
 
 export const usePdfStore = create<PdfState>((set, get) => ({
@@ -89,10 +124,19 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   annotations: [],
   selectedId: null,
   currentColor: '#e11d2a',
+  currentStrokeWidth: 2,
+  currentOpacity: 1,
+  currentFontSize: 16,
   past: [],
   future: [],
   pending: null,
   modal: null,
+  leftTab: 'thumbnails',
+  rightTab: 'properties',
+  layoutMode: 'continuous',
+  searchQuery: '',
+  pageSize: null,
+  fitRequest: null,
 
   setDocument: (bytes, name, path = null) =>
     set({
@@ -182,6 +226,44 @@ export const usePdfStore = create<PdfState>((set, get) => ({
 
   selectAnnotation: (id) => set({ selectedId: id }),
 
+  duplicateAnnotation: (id) =>
+    set((s) => {
+      const orig = s.annotations.find((a) => a.id === id)
+      if (!orig) return s
+      const copy = { ...moveAnnotation(orig, 12, 12), id: genId() } as Annotation
+      return {
+        past: [...s.past.slice(-(HISTORY_LIMIT - 1)), clone(s.annotations)],
+        future: [],
+        annotations: [...s.annotations, copy],
+        selectedId: copy.id,
+        dirty: true
+      }
+    }),
+
+  bringToFront: (id) =>
+    set((s) => {
+      const a = s.annotations.find((x) => x.id === id)
+      if (!a) return s
+      return {
+        past: [...s.past.slice(-(HISTORY_LIMIT - 1)), clone(s.annotations)],
+        future: [],
+        annotations: [...s.annotations.filter((x) => x.id !== id), a],
+        dirty: true
+      }
+    }),
+
+  sendToBack: (id) =>
+    set((s) => {
+      const a = s.annotations.find((x) => x.id === id)
+      if (!a) return s
+      return {
+        past: [...s.past.slice(-(HISTORY_LIMIT - 1)), clone(s.annotations)],
+        future: [],
+        annotations: [a, ...s.annotations.filter((x) => x.id !== id)],
+        dirty: true
+      }
+    }),
+
   clearAnnotations: () =>
     set((s) => ({
       past: [...s.past.slice(-(HISTORY_LIMIT - 1)), clone(s.annotations)],
@@ -218,5 +300,14 @@ export const usePdfStore = create<PdfState>((set, get) => ({
     }),
 
   setPending: (p) => set({ pending: p }),
-  setModal: (m) => set({ modal: m })
+  setModal: (m) => set({ modal: m }),
+  setCurrentStrokeWidth: (n) => set({ currentStrokeWidth: n }),
+  setCurrentOpacity: (n) => set({ currentOpacity: Math.min(1, Math.max(0, n)) }),
+  setCurrentFontSize: (n) => set({ currentFontSize: n }),
+  setLeftTab: (t) => set({ leftTab: t }),
+  setRightTab: (t) => set({ rightTab: t }),
+  setLayoutMode: (m) => set({ layoutMode: m }),
+  setSearchQuery: (q) => set({ searchQuery: q }),
+  setPageSize: (s) => set({ pageSize: s }),
+  requestFit: (m) => set({ fitRequest: m })
 }))

@@ -14,6 +14,11 @@ export default function PdfCanvas(): JSX.Element {
   const setNumPages = usePdfStore((s) => s.setNumPages)
   const setStatus = usePdfStore((s) => s.setStatus)
   const setCurrentPage = usePdfStore((s) => s.setCurrentPage)
+  const setPageSize = usePdfStore((s) => s.setPageSize)
+  const pageSize = usePdfStore((s) => s.pageSize)
+  const fitRequest = usePdfStore((s) => s.fitRequest)
+  const requestFit = usePdfStore((s) => s.requestFit)
+  const setZoom = usePdfStore((s) => s.setZoom)
 
   const docRef = useRef<typeof doc>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -37,6 +42,10 @@ export default function PdfCanvas(): JSX.Element {
         setDoc(loaded)
         setNumPages(loaded.numPages)
         setStatus(`Bereit · ${loaded.numPages} Seite(n)`)
+        void loaded.getPage(1).then((p) => {
+          const v = p.getViewport({ scale: 1 })
+          setPageSize({ w: v.width, h: v.height })
+        })
       })
       .catch((e: unknown) => {
         if (!cancelled) setStatus(`Fehler: ${e instanceof Error ? e.message : String(e)}`)
@@ -53,6 +62,22 @@ export default function PdfCanvas(): JSX.Element {
       docRef.current = null
     }
   }, [])
+
+  // Zoom einpassen (Seitenbreite / ganze Seite).
+  useEffect(() => {
+    if (!fitRequest) return
+    const el = containerRef.current
+    if (el && pageSize) {
+      const availW = el.clientWidth - 48
+      const availH = el.clientHeight - 48
+      const z =
+        fitRequest === 'page'
+          ? Math.min(availW / pageSize.w, availH / pageSize.h)
+          : availW / pageSize.w
+      setZoom(z)
+    }
+    requestFit(null)
+  }, [fitRequest, pageSize, setZoom, requestFit])
 
   useEffect(() => {
     const el = containerRef.current

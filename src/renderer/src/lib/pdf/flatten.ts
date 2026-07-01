@@ -51,7 +51,7 @@ export async function flattenAnnotations(
           width: a.w,
           height: a.h,
           color,
-          opacity: 0.35
+          opacity: a.opacity ?? 0.35
         })
         break
       }
@@ -62,8 +62,36 @@ export async function flattenAnnotations(
           width: a.w,
           height: a.h,
           borderColor: color,
-          borderWidth: a.strokeWidth
+          borderWidth: a.strokeWidth,
+          borderOpacity: a.opacity ?? 1
         })
+        break
+      }
+      case 'ellipse': {
+        page.drawEllipse({
+          x: a.x + a.w / 2,
+          y: ph - a.y - a.h / 2,
+          xScale: a.w / 2,
+          yScale: a.h / 2,
+          borderColor: color,
+          borderWidth: a.strokeWidth,
+          borderOpacity: a.opacity ?? 1
+        })
+        break
+      }
+      case 'line': {
+        const s = { x: a.x1, y: ph - a.y1 }
+        const e = { x: a.x2, y: ph - a.y2 }
+        const op = a.opacity ?? 1
+        page.drawLine({ start: s, end: e, thickness: a.strokeWidth, color, opacity: op })
+        if (a.arrow) {
+          const ang = Math.atan2(e.y - s.y, e.x - s.x)
+          const len = 8 + a.strokeWidth * 2
+          const h1 = ang - Math.PI / 6
+          const h2 = ang + Math.PI / 6
+          page.drawLine({ start: e, end: { x: e.x - len * Math.cos(h1), y: e.y - len * Math.sin(h1) }, thickness: a.strokeWidth, color, opacity: op })
+          page.drawLine({ start: e, end: { x: e.x - len * Math.cos(h2), y: e.y - len * Math.sin(h2) }, thickness: a.strokeWidth, color, opacity: op })
+        }
         break
       }
       case 'note': {
@@ -106,7 +134,8 @@ export async function flattenAnnotations(
             start: { x: p1.x, y: ph - p1.y },
             end: { x: p2.x, y: ph - p2.y },
             thickness: a.strokeWidth,
-            color
+            color,
+            opacity: a.opacity ?? 1
           })
         }
         break
