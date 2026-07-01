@@ -6,7 +6,8 @@ import {
   type SavedBatch,
   type BatchFile,
   type EncryptRequest,
-  type EncryptResult
+  type EncryptResult,
+  type ImageInput
 } from '../shared/types'
 
 /**
@@ -16,6 +17,8 @@ import {
 const api = {
   /** Öffnet den nativen "PDF öffnen"-Dialog im Main-Prozess. */
   openPdf: (): Promise<OpenedPdf | null> => ipcRenderer.invoke(IPC.openPdf),
+  /** Öffnet einen Mehrfach-Dialog für Bilder (PNG/JPG). */
+  openImages: (): Promise<ImageInput[] | null> => ipcRenderer.invoke(IPC.openImages),
   /** Öffnet "Speichern unter" und schreibt die Bytes auf die Platte. */
   savePdf: (bytes: Uint8Array, defaultName?: string): Promise<SavedPdf | null> =>
     ipcRenderer.invoke(IPC.savePdf, { bytes, defaultName }),

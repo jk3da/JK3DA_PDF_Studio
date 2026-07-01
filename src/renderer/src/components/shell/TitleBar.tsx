@@ -6,6 +6,8 @@ import { applyRedactionToDoc } from '../../lib/pdf/redactApply'
 import { applyCropToDoc } from '../../lib/pdf/crop'
 import { pageOps } from '../../lib/pdf/pageOps'
 import { docTools } from '../../lib/pdf/docTools'
+import { exportToImages } from '../../lib/pdf/exportImages'
+import { openImagesAsPdf } from '../../lib/pdf/fromImages'
 
 interface MItem {
   label?: string
@@ -40,8 +42,12 @@ export default function TitleBar({ onOpen }: { onOpen: () => void }): JSX.Elemen
       name: 'Datei',
       items: [
         { label: 'Öffnen…', icon: 'open', sc: 'Strg+O', onClick: onOpen },
+        { label: 'Neu aus Bildern…', icon: 'new-from-images', onClick: () => void openImagesAsPdf() },
         { label: 'Speichern unter…', icon: 'save', sc: 'Strg+S', onClick: () => void saveCurrentDocument(), disabled: dis },
         { label: 'Drucken…', icon: 'print', sc: 'Strg+P', onClick: () => window.print(), disabled: dis },
+        { divider: true },
+        { label: 'Export → PNG…', icon: 'export-image', onClick: () => void exportToImages('png'), disabled: dis },
+        { label: 'Export → JPG…', icon: 'export-image', onClick: () => void exportToImages('jpeg'), disabled: dis },
         { divider: true },
         { label: 'Sicherheit & Metadaten', icon: 'encrypt-lock', onClick: () => s().setModal('security'), disabled: dis },
         { divider: true },

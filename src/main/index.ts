@@ -10,7 +10,8 @@ import {
   type SavedBatch,
   type BatchFile,
   type EncryptRequest,
-  type EncryptResult
+  type EncryptResult,
+  type ImageInput
 } from '../shared/types'
 import { toolAvailable, runBinary } from './sidecars'
 
@@ -88,6 +89,20 @@ function registerIpc(): void {
       name: basename(filePath),
       bytes: new Uint8Array(data)
     }
+  })
+
+  ipcMain.handle(IPC.openImages, async (): Promise<ImageInput[] | null> => {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Bilder auswählen',
+      properties: ['openFile', 'multiSelections'],
+      filters: [{ name: 'Bilder', extensions: ['png', 'jpg', 'jpeg'] }]
+    })
+    if (canceled || filePaths.length === 0) return null
+    const out: ImageInput[] = []
+    for (const p of filePaths) {
+      out.push({ name: basename(p), bytes: new Uint8Array(await readFile(p)) })
+    }
+    return out
   })
 
   // "Speichern unter": schreibt die Bytes nie über das Original, sondern fragt

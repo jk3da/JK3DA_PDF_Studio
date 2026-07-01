@@ -28,6 +28,12 @@ export interface BatchFile {
   bytes: Uint8Array
 }
 
+/** Eine geöffnete Bilddatei. */
+export interface ImageInput {
+  name: string
+  bytes: Uint8Array
+}
+
 /** Berechtigungen für die Verschlüsselung. */
 export interface EncryptPermissions {
   print: boolean
@@ -47,6 +53,7 @@ export type EncryptResult = { ok: true; bytes: Uint8Array } | { ok: false; error
 /** IPC-Kanalnamen zentral, damit Main und Preload sich nicht vertippen. */
 export const IPC = {
   openPdf: 'dialog:openPdf',
+  openImages: 'dialog:openImages',
   savePdf: 'dialog:savePdf',
   savePdfBatch: 'dialog:savePdfBatch',
   toolAvailable: 'sidecar:toolAvailable',
