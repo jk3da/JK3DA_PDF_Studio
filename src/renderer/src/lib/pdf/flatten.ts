@@ -119,27 +119,27 @@ export async function flattenAnnotations(
         break
       }
       case 'note': {
-        const size = 18
+        const size = 24
         page.drawRectangle({
           x: a.x,
           y: ph - a.y - size,
           width: size,
           height: size,
-          color: hexToRgb('#ffd400'),
-          borderColor: rgb(0.6, 0.5, 0),
+          color: hexToRgb('#f59e0b'),
+          borderColor: rgb(0.6, 0.4, 0),
           borderWidth: 1
         })
         page.drawText('!', {
-          x: a.x + 6,
-          y: ph - a.y - size + 4,
-          size: 13,
+          x: a.x + 9,
+          y: ph - a.y - size + 6,
+          size: 14,
           font: helvBold,
-          color: rgb(0.3, 0.25, 0)
+          color: rgb(0.106, 0.122, 0.141)
         })
         if (a.text.trim()) {
           page.drawText(a.text.slice(0, 120), {
             x: a.x + size + 4,
-            y: ph - a.y - 12,
+            y: ph - a.y - 14,
             size: 9,
             font: helv,
             color: rgb(0.2, 0.2, 0.2),

@@ -137,7 +137,7 @@ export function annotationBounds(a: Annotation): { x: number; y: number; w: numb
     case 'text':
       return { x: a.x, y: a.y, w: Math.max(40, a.text.length * a.fontSize * 0.5), h: a.fontSize * 1.4 }
     case 'note':
-      return { x: a.x, y: a.y, w: 22, h: 22 }
+      return { x: a.x, y: a.y, w: 24, h: 24 }
     case 'highlight':
     case 'rect':
     case 'redact':

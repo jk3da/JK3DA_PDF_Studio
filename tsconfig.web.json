@@ -28,5 +28,6 @@
     "src/renderer/src/**/*",
     "src/shared/**/*",
     "src/preload/index.d.ts"
-  ]
+  ],
+  "exclude": ["src/**/*.test.ts"]
 }

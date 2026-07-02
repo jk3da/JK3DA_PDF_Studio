@@ -308,7 +308,7 @@ function AnnotationView({ a, zoom, selected, hidden }: ViewProps): JSX.Element |
       return <div className="absolute whitespace-pre-wrap" style={{ left: a.x * zoom, top: a.y * zoom, color: a.color, fontSize: a.fontSize * zoom, lineHeight: 1.2, ...ring }}>{a.text || ' '}</div>
     case 'note':
       return (
-        <div className="absolute grid place-items-center rounded-md font-bold text-[#1b1f24]" style={{ left: a.x * zoom, top: a.y * zoom, width: 26 * zoom, height: 26 * zoom, background: '#f59e0b', borderRadius: `${6 * zoom}px ${6 * zoom}px ${6 * zoom}px ${2 * zoom}px`, ...ring }} title={a.text}>
+        <div className="absolute grid place-items-center font-bold text-[#1b1f24]" style={{ left: a.x * zoom, top: a.y * zoom, width: 24 * zoom, height: 24 * zoom, background: '#f59e0b', borderRadius: `${6 * zoom}px ${6 * zoom}px ${6 * zoom}px ${2 * zoom}px`, ...ring }} title={a.text}>
           <span style={{ fontSize: 13 * zoom }}>!</span>
         </div>
       )

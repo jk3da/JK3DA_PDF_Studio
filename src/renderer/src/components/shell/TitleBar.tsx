@@ -25,6 +25,7 @@ export default function TitleBar({ onOpen }: { onOpen: () => void }): JSX.Elemen
   const name = usePdfStore((s) => s.name)
   const dirty = usePdfStore((s) => s.dirty)
   const hasDoc = usePdfStore((s) => s.bytes !== null)
+  const hasSel = usePdfStore((s) => s.selectedId !== null)
   const [open, setOpen] = useState<string | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -63,8 +64,8 @@ export default function TitleBar({ onOpen }: { onOpen: () => void }): JSX.Elemen
         { label: 'Rückgängig', icon: 'undo', sc: 'Strg+Z', onClick: () => s().undo() },
         { label: 'Wiederholen', icon: 'redo', sc: 'Strg+Y', onClick: () => s().redo() },
         { divider: true },
-        { label: 'Duplizieren', icon: 'duplicate', onClick: () => { const id = s().selectedId; if (id) s().duplicateAnnotation(id) }, disabled: !s().selectedId },
-        { label: 'Auswahl löschen', icon: 'delete', sc: 'Entf', onClick: () => { const id = s().selectedId; if (id) s().removeAnnotation(id) }, disabled: !s().selectedId },
+        { label: 'Duplizieren', icon: 'duplicate', onClick: () => { const id = s().selectedId; if (id) s().duplicateAnnotation(id) }, disabled: !hasSel },
+        { label: 'Auswahl löschen', icon: 'delete', sc: 'Entf', onClick: () => { const id = s().selectedId; if (id) s().removeAnnotation(id) }, disabled: !hasSel },
         { label: 'Alle Anmerkungen entfernen', icon: 'clear-form', onClick: () => s().clearAnnotations(), disabled: dis }
       ]
     },

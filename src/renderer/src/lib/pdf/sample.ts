@@ -45,3 +45,14 @@ export async function createWelcomePdf(): Promise<Uint8Array> {
 
   return doc.save()
 }
+
+/** Erzeugt ein einfaches PDF mit N A4-Seiten (für Tests/Platzhalter). */
+export async function createBlankPdf(pageCount = 3): Promise<Uint8Array> {
+  const doc = await PDFDocument.create()
+  const font = await doc.embedFont(StandardFonts.Helvetica)
+  for (let i = 0; i < pageCount; i++) {
+    const page = doc.addPage([595.28, 841.89])
+    page.drawText(`Seite ${i + 1}`, { x: 50, y: 780, size: 20, font })
+  }
+  return doc.save()
+}
