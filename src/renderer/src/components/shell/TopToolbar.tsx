@@ -69,31 +69,31 @@ export default function TopToolbar({ onOpen }: { onOpen: () => void }): JSX.Elem
 
       <Divider />
 
-      <button type="button" onClick={zoomOut} disabled={!hasDoc} title="Verkleinern" className={iconBtn}>
+      <button type="button" onClick={zoomOut} disabled={!hasDoc} title="Verkleinern (Strg −)" className={iconBtn}>
         <Icon name="zoom-out" />
       </button>
       <button
         type="button"
         onClick={resetZoom}
         disabled={!hasDoc}
-        title="Zoom zurücksetzen"
+        title="Originalgröße (Strg+1)"
         className="flex h-8 min-w-[64px] items-center justify-between rounded-control border border-chrome-600 bg-chrome-700 px-2.5 text-ui tabular-nums text-ink disabled:opacity-50"
       >
         {Math.round(zoom * 100)}%<Icon name="field-dropdown" size={14} />
       </button>
-      <button type="button" onClick={zoomIn} disabled={!hasDoc} title="Vergrößern" className={iconBtn}>
+      <button type="button" onClick={zoomIn} disabled={!hasDoc} title="Vergrößern (Strg +, Strg+Mausrad)" className={iconBtn}>
         <Icon name="zoom-in" />
       </button>
-      <button type="button" onClick={() => requestFit('width')} disabled={!hasDoc} title="Seitenbreite" className={iconBtn}>
+      <button type="button" onClick={() => requestFit('width')} disabled={!hasDoc} title="Seitenbreite (Strg+2)" className={iconBtn}>
         <Icon name="fit-width" />
       </button>
-      <button type="button" onClick={() => requestFit('page')} disabled={!hasDoc} title="Ganze Seite" className={iconBtn}>
+      <button type="button" onClick={() => requestFit('page')} disabled={!hasDoc} title="Ganze Seite (Strg+0)" className={iconBtn}>
         <Icon name="fit-page" />
       </button>
 
       <Divider />
 
-      <button type="button" onClick={() => go(currentPage - 1)} disabled={!hasDoc} title="Vorherige Seite" className={iconBtn}>
+      <button type="button" onClick={() => go(currentPage - 1)} disabled={!hasDoc} title="Vorherige Seite (Bild ↑)" className={iconBtn}>
         <Icon name="prev-page" />
       </button>
       <div className="flex items-center gap-1.5 text-ui text-[#c8ccd2]">
@@ -107,7 +107,7 @@ export default function TopToolbar({ onOpen }: { onOpen: () => void }): JSX.Elem
         />
         / {numPages || 0}
       </div>
-      <button type="button" onClick={() => go(currentPage + 1)} disabled={!hasDoc} title="Nächste Seite" className={iconBtn}>
+      <button type="button" onClick={() => go(currentPage + 1)} disabled={!hasDoc} title="Nächste Seite (Bild ↓)" className={iconBtn}>
         <Icon name="next-page" />
       </button>
 

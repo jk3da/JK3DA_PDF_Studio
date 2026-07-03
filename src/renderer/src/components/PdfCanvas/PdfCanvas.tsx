@@ -64,15 +64,32 @@ export default function PdfCanvas(): JSX.Element {
     }
   }, [])
 
-  // Strg+Mausrad zoomt (wie in jedem PDF-Viewer).
+  // Strg+Mausrad zoomt; im Einzelseiten-Modus blättert das Rad an den Seitenrändern.
+  const flipAtRef = useRef(0)
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
     const onWheel = (e: WheelEvent): void => {
-      if (!e.ctrlKey) return
-      e.preventDefault()
       const s = usePdfStore.getState()
-      s.setZoom(s.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1))
+      if (e.ctrlKey) {
+        e.preventDefault()
+        s.setZoom(s.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1))
+        return
+      }
+      if (s.layoutMode !== 'single') return
+      const now = Date.now()
+      if (now - flipAtRef.current < 350) return
+      const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 2
+      const atTop = el.scrollTop <= 2
+      if (e.deltaY > 0 && atBottom && s.currentPage < s.numPages) {
+        flipAtRef.current = now
+        s.setCurrentPage(s.currentPage + 1)
+        el.scrollTop = 0
+      } else if (e.deltaY < 0 && atTop && s.currentPage > 1) {
+        flipAtRef.current = now
+        s.setCurrentPage(s.currentPage - 1)
+        el.scrollTop = el.scrollHeight
+      }
     }
     el.addEventListener('wheel', onWheel, { passive: false })
     return () => el.removeEventListener('wheel', onWheel)
@@ -123,11 +140,13 @@ export default function PdfCanvas(): JSX.Element {
       ? 'flex flex-row flex-wrap content-start justify-center gap-3'
       : 'flex flex-col items-center'
 
-  // Hand-Werkzeug: Ziehen scrollt den Canvas (Panning).
+  // Hand-Werkzeug oder mittlere Maustaste: Ziehen scrollt den Canvas (Panning).
   const onPanDown = (e: ReactPointerEvent<HTMLDivElement>): void => {
-    if (tool !== 'hand' || e.button !== 0) return
+    const middle = e.button === 1
+    if (!middle && (tool !== 'hand' || e.button !== 0)) return
     const el = containerRef.current
     if (!el) return
+    if (middle) e.preventDefault()
     pan.current = { x: e.clientX, y: e.clientY, sl: el.scrollLeft, st: el.scrollTop }
     el.setPointerCapture(e.pointerId)
   }

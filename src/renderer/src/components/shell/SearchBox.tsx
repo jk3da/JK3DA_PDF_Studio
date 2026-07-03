@@ -63,10 +63,12 @@ export default function SearchBox(): JSX.Element {
         <Icon name="search" size={16} />
       </span>
       <input
+        id="doc-search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && void run()}
-        placeholder="Im Dokument suchen…"
+        placeholder="Suchen… (Strg+F)"
+        title="Im Dokument suchen (Strg+F), Enter startet"
         disabled={!hasDoc}
         className="h-9 w-full rounded-control border border-chrome-600 bg-chrome-700 pl-[30px] pr-2.5 text-ui text-ink outline-none placeholder:text-ink-muted focus:border-primary disabled:opacity-50"
       />

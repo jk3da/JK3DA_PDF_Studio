@@ -2,21 +2,21 @@ import { Icon } from '../ui/icons'
 import { usePdfStore, type ToolId, type ModalId } from '../../lib/state/store'
 
 const TOOLS: { id: ToolId; label: string; icon: string }[] = [
-  { id: 'select', label: 'Auswählen', icon: 'select' },
-  { id: 'hand', label: 'Hand / Verschieben', icon: 'hand-pan' },
-  { id: 'text', label: 'Text', icon: 'text' },
-  { id: 'note', label: 'Notiz', icon: 'note' },
-  { id: 'draw', label: 'Freihand', icon: 'freehand' },
-  { id: 'highlight', label: 'Markieren', icon: 'highlight' },
-  { id: 'line', label: 'Linie', icon: 'line' },
-  { id: 'arrow', label: 'Pfeil', icon: 'arrow' },
+  { id: 'select', label: 'Auswählen (V)', icon: 'select' },
+  { id: 'hand', label: 'Hand / Verschieben (H, Leertaste halten)', icon: 'hand-pan' },
+  { id: 'text', label: 'Text (T)', icon: 'text' },
+  { id: 'note', label: 'Notiz (N)', icon: 'note' },
+  { id: 'draw', label: 'Freihand (F)', icon: 'freehand' },
+  { id: 'highlight', label: 'Markieren (M)', icon: 'highlight' },
+  { id: 'line', label: 'Linie (L)', icon: 'line' },
+  { id: 'arrow', label: 'Pfeil (P)', icon: 'arrow' },
   { id: 'measure', label: 'Messen (Distanz)', icon: 'measure-distance' },
   { id: 'measureArea', label: 'Messen (Fläche)', icon: 'measure-area' },
-  { id: 'rectangle', label: 'Rechteck', icon: 'rectangle' },
-  { id: 'ellipse', label: 'Ellipse', icon: 'ellipse' },
+  { id: 'rectangle', label: 'Rechteck (R)', icon: 'rectangle' },
+  { id: 'ellipse', label: 'Ellipse (E)', icon: 'ellipse' },
   { id: 'crop', label: 'Zuschneiden', icon: 'crop' },
-  { id: 'redact', label: 'Schwärzen', icon: 'redaction' },
-  { id: 'stamp', label: 'Stempel', icon: 'stamp' }
+  { id: 'redact', label: 'Schwärzen (X)', icon: 'redaction' },
+  { id: 'stamp', label: 'Stempel (S)', icon: 'stamp' }
 ]
 
 const MODAL_TOOLS: { id: ModalId; label: string; icon: string }[] = [

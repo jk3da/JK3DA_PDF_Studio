@@ -72,11 +72,11 @@ export default function TitleBar({ onOpen }: { onOpen: () => void }): JSX.Elemen
     {
       name: 'Ansicht',
       items: [
-        { label: 'Vergrößern', icon: 'zoom-in', onClick: () => s().zoomIn(), disabled: dis },
-        { label: 'Verkleinern', icon: 'zoom-out', onClick: () => s().zoomOut(), disabled: dis },
-        { label: 'Originalgröße (100 %)', icon: 'actual-size', onClick: () => s().resetZoom(), disabled: dis },
-        { label: 'Seitenbreite', icon: 'fit-width', onClick: () => s().requestFit('width'), disabled: dis },
-        { label: 'Ganze Seite', icon: 'fit-page', onClick: () => s().requestFit('page'), disabled: dis },
+        { label: 'Vergrößern', icon: 'zoom-in', sc: 'Strg +', onClick: () => s().zoomIn(), disabled: dis },
+        { label: 'Verkleinern', icon: 'zoom-out', sc: 'Strg −', onClick: () => s().zoomOut(), disabled: dis },
+        { label: 'Originalgröße (100 %)', icon: 'actual-size', sc: 'Strg+1', onClick: () => s().resetZoom(), disabled: dis },
+        { label: 'Seitenbreite', icon: 'fit-width', sc: 'Strg+2', onClick: () => s().requestFit('width'), disabled: dis },
+        { label: 'Ganze Seite', icon: 'fit-page', sc: 'Strg+0', onClick: () => s().requestFit('page'), disabled: dis },
         { divider: true },
         { label: 'Einzelseite', icon: 'layout-single', onClick: () => s().setLayoutMode('single'), disabled: dis },
         { label: 'Fortlaufend', icon: 'layout-continuous', onClick: () => s().setLayoutMode('continuous'), disabled: dis },
@@ -123,7 +123,10 @@ export default function TitleBar({ onOpen }: { onOpen: () => void }): JSX.Elemen
     },
     {
       name: 'Hilfe',
-      items: [{ label: 'Über JK3DA PDF Studio', icon: 'about', onClick: () => s().setModal('about') }]
+      items: [
+        { label: 'Tastenkürzel…', icon: 'settings', onClick: () => s().setModal('shortcuts') },
+        { label: 'Über JK3DA PDF Studio', icon: 'about', onClick: () => s().setModal('about') }
+      ]
     }
   ]
 
