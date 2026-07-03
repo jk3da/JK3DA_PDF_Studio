@@ -47,6 +47,7 @@ import ShortcutsModal from './components/modals/ShortcutsModal'
 import WatermarkModal from './components/modals/WatermarkModal'
 import HeaderFooterModal from './components/modals/HeaderFooterModal'
 import PlacementGhost from './components/shell/PlacementGhost'
+import TextSelectionPopover from './components/shell/TextSelectionPopover'
 
 export default function App(): JSX.Element {
   const setDocument = usePdfStore((s) => s.setDocument)
@@ -262,6 +263,7 @@ export default function App(): JSX.Element {
       <StatusBar />
 
       <PlacementGhost />
+      <TextSelectionPopover />
 
       {modal === 'signature' && <SignatureModal />}
       {modal === 'forms' && <FormsModal />}

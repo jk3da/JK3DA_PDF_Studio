@@ -23,6 +23,7 @@ const GROUPS: { title: string; rows: Row[] }[] = [
       { keys: ['Strg', 'Y'], label: 'Wiederholen' },
       { keys: ['Entf'], label: 'Auswahl löschen' },
       { keys: ['Pfeiltasten'], label: 'Auswahl verschieben (Shift = 10 pt)' },
+      { keys: ['Rechtsklick'], label: 'Kontextmenü auf Anmerkung' },
       { keys: ['Esc'], label: 'Abwählen / zurück zum Auswählen' }
     ]
   },

@@ -102,6 +102,8 @@ interface PdfState {
   setCurrentColor: (c: string) => void
   beginHistory: () => void
   addAnnotation: (a: Annotation) => void
+  /** Mehrere Annotationen mit EINEM History-Eintrag (z. B. Text-Markierung). */
+  addAnnotations: (list: Annotation[]) => void
   updateAnnotation: (id: string, patch: Partial<Annotation>) => void
   removeAnnotation: (id: string) => void
   selectAnnotation: (id: string | null) => void
@@ -225,6 +227,17 @@ export const usePdfStore = create<PdfState>((set, get) => ({
       selectedId: a.id,
       dirty: true
     })),
+
+  addAnnotations: (list) =>
+    set((s) => {
+      if (list.length === 0) return s
+      return {
+        past: [...s.past.slice(-(HISTORY_LIMIT - 1)), clone(s.annotations)],
+        future: [],
+        annotations: [...s.annotations, ...list],
+        dirty: true
+      }
+    }),
 
   updateAnnotation: (id, patch) =>
     set((s) => ({

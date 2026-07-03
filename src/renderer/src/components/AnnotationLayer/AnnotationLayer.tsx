@@ -1,7 +1,20 @@
-import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent
+} from 'react'
 import { usePdfStore } from '../../lib/state/store'
 import { CURSORS } from '../../lib/cursors'
-import { annotationBounds, moveAnnotation, type Annotation } from '../../lib/annotations/types'
+import { Menu } from '../ui/components'
+import {
+  annotationBounds,
+  moveAnnotation,
+  resizeAnnotation,
+  type Annotation,
+  type ResizeHandle
+} from '../../lib/annotations/types'
 
 interface Props {
   pageNumber: number
@@ -36,9 +49,50 @@ const newId = (): string =>
 
 type Gesture =
   | { kind: 'move'; id: string; orig: Annotation; startX: number; startY: number }
+  | { kind: 'resize'; id: string; orig: Annotation; handle: ResizeHandle; startX: number; startY: number }
   | { kind: 'box'; startX: number; startY: number }
   | { kind: 'line'; startX: number; startY: number }
   | { kind: 'draw'; points: Array<{ x: number; y: number }> }
+
+const HANDLE_CURSOR: Record<ResizeHandle, string> = {
+  nw: 'nwse-resize',
+  se: 'nwse-resize',
+  ne: 'nesw-resize',
+  sw: 'nesw-resize',
+  n: 'ns-resize',
+  s: 'ns-resize',
+  e: 'ew-resize',
+  w: 'ew-resize',
+  p1: 'move',
+  p2: 'move'
+}
+
+/** Griff-Positionen (in PDF-Punkten) für die ausgewählte Annotation. */
+function handlesFor(a: Annotation): { id: ResizeHandle; x: number; y: number }[] {
+  if (a.type === 'line') {
+    return [
+      { id: 'p1', x: a.x1, y: a.y1 },
+      { id: 'p2', x: a.x2, y: a.y2 }
+    ]
+  }
+  if (a.type === 'text' || a.type === 'note') return []
+  const b = annotationBounds(a)
+  const corners: { id: ResizeHandle; x: number; y: number }[] = [
+    { id: 'nw', x: b.x, y: b.y },
+    { id: 'ne', x: b.x + b.w, y: b.y },
+    { id: 'se', x: b.x + b.w, y: b.y + b.h },
+    { id: 'sw', x: b.x, y: b.y + b.h }
+  ]
+  // Freihand/Signatur: nur Ecken (proportionales Skalieren).
+  if (a.type === 'draw' || a.type === 'signature') return corners
+  return [
+    ...corners,
+    { id: 'n', x: b.x + b.w / 2, y: b.y },
+    { id: 'e', x: b.x + b.w, y: b.y + b.h / 2 },
+    { id: 's', x: b.x + b.w / 2, y: b.y + b.h },
+    { id: 'w', x: b.x, y: b.y + b.h / 2 }
+  ]
+}
 
 export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props): JSX.Element {
   const tool = usePdfStore((s) => s.tool)
@@ -52,6 +106,10 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
   const pending = usePdfStore((s) => s.pending)
   const addAnnotation = usePdfStore((s) => s.addAnnotation)
   const updateAnnotation = usePdfStore((s) => s.updateAnnotation)
+  const removeAnnotation = usePdfStore((s) => s.removeAnnotation)
+  const duplicateAnnotation = usePdfStore((s) => s.duplicateAnnotation)
+  const bringToFront = usePdfStore((s) => s.bringToFront)
+  const sendToBack = usePdfStore((s) => s.sendToBack)
   const selectAnnotation = usePdfStore((s) => s.selectAnnotation)
   const beginHistory = usePdfStore((s) => s.beginHistory)
   const setTool = usePdfStore((s) => s.setTool)
@@ -61,6 +119,7 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
   const gesture = useRef<Gesture | null>(null)
   const [draft, setDraft] = useState<Annotation | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; id: string } | null>(null)
   const editorRef = useRef<HTMLTextAreaElement>(null)
 
   const pageAnnos = annotations.filter((a) => a.page === pageNumber)
@@ -171,6 +230,8 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
 
     if (g.kind === 'move') {
       updateAnnotation(g.id, moveAnnotation(g.orig, x - g.startX, y - g.startY))
+    } else if (g.kind === 'resize') {
+      updateAnnotation(g.id, resizeAnnotation(g.orig, g.handle, x - g.startX, y - g.startY))
     } else if (g.kind === 'draw') {
       g.points.push({ x, y })
       setDraft({ id: 'draft', page: pageNumber, type: 'draw', points: [...g.points], color, strokeWidth: strokeW, opacity })
@@ -222,7 +283,41 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
     }
   }
 
+  // Resize-Griffe: stopPropagation, damit die Auswahl-Logik nicht anspringt.
+  const startResize = (e: ReactPointerEvent<HTMLDivElement>, a: Annotation, handle: ResizeHandle): void => {
+    if (e.button !== 0) return
+    e.stopPropagation()
+    const { x, y } = toPoints(e.clientX, e.clientY)
+    beginHistory()
+    gesture.current = { kind: 'resize', id: a.id, orig: a, handle, startX: x, startY: y }
+    layerRef.current?.setPointerCapture(e.pointerId)
+  }
+
+  // Rechtsklick: Kontextmenü auf der getroffenen Annotation.
+  const onContextMenu = (e: ReactMouseEvent<HTMLDivElement>): void => {
+    e.preventDefault()
+    const { x, y } = toPoints(e.clientX, e.clientY)
+    const hit = hitTest(x, y)
+    if (hit) {
+      selectAnnotation(hit.id)
+      setCtxMenu({ x: e.clientX, y: e.clientY, id: hit.id })
+    } else {
+      setCtxMenu(null)
+    }
+  }
+
+  const onCtxSelect = (action: string): void => {
+    const id = ctxMenu?.id
+    setCtxMenu(null)
+    if (!id) return
+    if (action === 'duplicate') duplicateAnnotation(id)
+    else if (action === 'front') bringToFront(id)
+    else if (action === 'back') sendToBack(id)
+    else if (action === 'delete') removeAnnotation(id)
+  }
+
   const editing = editingId ? pageAnnos.find((a) => a.id === editingId) : null
+  const selAnno = tool === 'select' && !draft ? pageAnnos.find((a) => a.id === selectedId) : undefined
   const cursor = pending ? 'copy' : (TOOL_CURSOR[tool] ?? 'crosshair')
 
   return (
@@ -234,11 +329,50 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onDoubleClick={onDoubleClick}
+      onContextMenu={onContextMenu}
     >
       {pageAnnos.map((a) => (
         <AnnotationView key={a.id} a={a} zoom={zoom} selected={a.id === selectedId} hidden={a.id === editingId} />
       ))}
       {draft && <AnnotationView a={draft} zoom={zoom} selected={false} hidden={false} />}
+
+      {selAnno &&
+        handlesFor(selAnno).map((h) => (
+          <div
+            key={h.id}
+            onPointerDown={(e) => startResize(e, selAnno, h.id)}
+            className="absolute z-10 h-2.5 w-2.5 -translate-x-1/2 -translate-y-1/2 rounded-[2px] border-[1.5px] border-white bg-primary shadow"
+            style={{ left: h.x * zoom, top: h.y * zoom, cursor: HANDLE_CURSOR[h.id] }}
+          />
+        ))}
+
+      {ctxMenu && (
+        <div
+          className="fixed inset-0 z-[80]"
+          onPointerDown={() => setCtxMenu(null)}
+          onContextMenu={(e) => {
+            e.preventDefault()
+            setCtxMenu(null)
+          }}
+        >
+          <div
+            className="absolute"
+            style={{ left: ctxMenu.x, top: ctxMenu.y }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <Menu
+              items={[
+                { id: 'duplicate', label: 'Duplizieren', icon: 'duplicate' },
+                { id: 'front', label: 'In den Vordergrund', icon: 'bring-front' },
+                { id: 'back', label: 'In den Hintergrund', icon: 'send-back' },
+                { id: 'd1', label: '', divider: true },
+                { id: 'delete', label: 'Löschen', icon: 'delete', shortcut: ['Entf'], danger: true }
+              ]}
+              onSelect={onCtxSelect}
+            />
+          </div>
+        </div>
+      )}
 
       {editing && (editing.type === 'text' || editing.type === 'note') && (
         <textarea

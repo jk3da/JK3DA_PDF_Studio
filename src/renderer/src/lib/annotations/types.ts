@@ -163,6 +163,79 @@ export function annotationBounds(a: Annotation): { x: number; y: number; w: numb
   }
 }
 
+/** Griff-Positionen fürs Skalieren: Box-Ecken/-Kanten bzw. Linien-Endpunkte. */
+export type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'p1' | 'p2'
+
+const MIN_SIZE = 8
+
+function resizeRect(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  handle: string,
+  dx: number,
+  dy: number
+): { x: number; y: number; w: number; h: number } {
+  let nx = x
+  let ny = y
+  let nw = w
+  let nh = h
+  if (handle.includes('w')) {
+    nx = x + dx
+    nw = w - dx
+  }
+  if (handle.includes('e')) nw = w + dx
+  if (handle.includes('n')) {
+    ny = y + dy
+    nh = h - dy
+  }
+  if (handle.includes('s')) nh = h + dy
+  if (nw < MIN_SIZE) {
+    if (handle.includes('w')) nx = x + w - MIN_SIZE
+    nw = MIN_SIZE
+  }
+  if (nh < MIN_SIZE) {
+    if (handle.includes('n')) ny = y + h - MIN_SIZE
+    nh = MIN_SIZE
+  }
+  return { x: nx, y: ny, w: nw, h: nh }
+}
+
+/**
+ * Skaliert/verändert eine Annotation über einen Griff um (dx, dy) — immutabel.
+ * Linien bewegen den jeweiligen Endpunkt, Freihand skaliert seine Punkte
+ * proportional zur neuen Bounding-Box; Text/Notiz sind nicht skalierbar.
+ */
+export function resizeAnnotation(
+  a: Annotation,
+  handle: ResizeHandle,
+  dx: number,
+  dy: number
+): Annotation {
+  switch (a.type) {
+    case 'line':
+      if (handle === 'p1') return { ...a, x1: a.x1 + dx, y1: a.y1 + dy }
+      if (handle === 'p2') return { ...a, x2: a.x2 + dx, y2: a.y2 + dy }
+      return a
+    case 'draw':
+    case 'signature': {
+      const b = annotationBounds(a)
+      const r = resizeRect(b.x, b.y, b.w, b.h, handle, dx, dy)
+      const sx = b.w > 0 ? r.w / b.w : 1
+      const sy = b.h > 0 ? r.h / b.h : 1
+      return { ...a, points: a.points.map((p) => ({ x: r.x + (p.x - b.x) * sx, y: r.y + (p.y - b.y) * sy })) }
+    }
+    case 'text':
+    case 'note':
+      return a
+    default: {
+      const r = resizeRect(a.x, a.y, a.w, a.h, handle, dx, dy)
+      return { ...a, ...r }
+    }
+  }
+}
+
 /** Verschiebt eine Annotation um (dx, dy) Punkte (immutabel). */
 export function moveAnnotation(a: Annotation, dx: number, dy: number): Annotation {
   switch (a.type) {
