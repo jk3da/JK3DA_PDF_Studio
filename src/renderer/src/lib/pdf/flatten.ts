@@ -1,5 +1,6 @@
 import { PDFDocument, StandardFonts, rgb, type RGB } from 'pdf-lib'
 import type { Annotation } from '../annotations/types'
+import { dataUrlToBytes } from '../bytes'
 
 function hexToRgb(hex: string): RGB {
   const m = hex.replace('#', '')
@@ -197,12 +198,4 @@ export async function flattenAnnotations(
   }
 
   return pdf.save()
-}
-
-function dataUrlToBytes(dataUrl: string): Uint8Array {
-  const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1)
-  const bin = atob(base64)
-  const out = new Uint8Array(bin.length)
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
-  return out
 }

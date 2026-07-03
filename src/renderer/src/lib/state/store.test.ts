@@ -53,6 +53,16 @@ describe('store: annotations', () => {
     usePdfStore.getState().updateAnnotation('a', { color: '#fff' })
     expect((usePdfStore.getState().annotations[0] as { color: string }).color).toBe('#fff')
   })
+
+  it('shallow history snapshots are safe: updates never leak into past states', () => {
+    // Bewegungs-Muster wie im Canvas: beginHistory + updateAnnotation.
+    usePdfStore.getState().addAnnotation(rect('a'))
+    usePdfStore.getState().beginHistory()
+    usePdfStore.getState().updateAnnotation('a', { x: 50 })
+    expect((usePdfStore.getState().annotations[0] as { x: number }).x).toBe(50)
+    usePdfStore.getState().undo()
+    expect((usePdfStore.getState().annotations[0] as { x: number }).x).toBe(0)
+  })
 })
 
 describe('store: zoom + document', () => {

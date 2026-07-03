@@ -1,20 +1,10 @@
-import * as pdfjsLib from 'pdfjs-dist'
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import { pdfjs as pdfjsLib } from './pdfjs'
 import { usePdfStore } from '../state/store'
 import { flattenAnnotations } from './flatten'
 import { mergePdfs } from './pages'
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
+import { dataUrlToBytes } from '../bytes'
 
 const MISSING = 'Tesseract (tesseract.exe + tessdata) fehlt in resources/bin/win/.'
-
-function dataUrlToBytes(dataUrl: string): Uint8Array {
-  const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1)
-  const bin = atob(base64)
-  const out = new Uint8Array(bin.length)
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
-  return out
-}
 
 /** Rendert Seiten zu Bildern, lässt Tesseract je Seite eine durchsuchbare PDF bauen, merged. */
 export async function runOcr(lang: string): Promise<void> {

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { TextLayer, type PDFDocumentProxy } from 'pdfjs-dist'
+import type { PDFDocumentProxy } from 'pdfjs-dist'
+import { pdfjs } from '../../lib/pdf/pdfjs'
 import AnnotationLayer from '../AnnotationLayer/AnnotationLayer'
 import { usePdfStore } from '../../lib/state/store'
 
@@ -18,13 +19,15 @@ export default function PdfPage({ pdf, pageNumber, zoom }: Props): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const textRef = useRef<HTMLDivElement>(null)
   const renderRef = useRef<CancelableRender | null>(null)
-  const textLayerRef = useRef<TextLayer | null>(null)
+  const textLayerRef = useRef<InstanceType<typeof pdfjs.TextLayer> | null>(null)
+  const renderedOnce = useRef(false)
   const [base, setBase] = useState<{ w: number; h: number } | null>(null)
   const textSelect = usePdfStore((s) => s.textSelect)
 
   useEffect(() => {
     let cancelled = false
-    void (async () => {
+
+    const render = async (): Promise<void> => {
       const page = await pdf.getPage(pageNumber)
       if (cancelled) return
       const unscaled = page.getViewport({ scale: 1 })
@@ -52,6 +55,7 @@ export default function PdfPage({ pdf, pageNumber, zoom }: Props): JSX.Element {
       } catch {
         return
       }
+      renderedOnce.current = true
 
       // Textauswahl-Ebene (für Markieren/Kopieren)
       const container = textRef.current
@@ -61,7 +65,7 @@ export default function PdfPage({ pdf, pageNumber, zoom }: Props): JSX.Element {
           container.replaceChildren()
           container.style.setProperty('--scale-factor', String(zoom))
           container.style.setProperty('--total-scale-factor', String(zoom))
-          const tl = new TextLayer({
+          const tl = new pdfjs.TextLayer({
             textContentSource: await page.getTextContent(),
             container,
             viewport
@@ -72,9 +76,16 @@ export default function PdfPage({ pdf, pageNumber, zoom }: Props): JSX.Element {
           /* Text-Layer ist optional — Fehler ignorieren */
         }
       }
-    })()
+    }
+
+    // Beim Zoomen skaliert das alte Canvas sofort per CSS; das scharfe
+    // Neu-Rendern folgt entprellt, statt jeden Zoom-Tick voll zu rastern.
+    const delay = renderedOnce.current ? 160 : 0
+    const timer = window.setTimeout(() => void render(), delay)
+
     return () => {
       cancelled = true
+      window.clearTimeout(timer)
       renderRef.current?.cancel()
       textLayerRef.current?.cancel()
     }

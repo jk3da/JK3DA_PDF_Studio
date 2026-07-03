@@ -1,10 +1,7 @@
-import { useEffect, useRef } from 'react'
-import * as pdfjsLib from 'pdfjs-dist'
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import { useEffect, useRef, type PointerEvent as ReactPointerEvent } from 'react'
+import { pdfjs as pdfjsLib } from '../../lib/pdf/pdfjs'
 import PdfPage from './PdfPage'
 import { usePdfStore } from '../../lib/state/store'
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
 
 export default function PdfCanvas(): JSX.Element {
   const bytes = usePdfStore((s) => s.bytes)
@@ -21,9 +18,11 @@ export default function PdfCanvas(): JSX.Element {
   const setZoom = usePdfStore((s) => s.setZoom)
   const layoutMode = usePdfStore((s) => s.layoutMode)
   const currentPage = usePdfStore((s) => s.currentPage)
+  const tool = usePdfStore((s) => s.tool)
 
   const docRef = useRef<typeof doc>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const pan = useRef<{ x: number; y: number; sl: number; st: number } | null>(null)
 
   useEffect(() => {
     if (!bytes) {
@@ -63,6 +62,20 @@ export default function PdfCanvas(): JSX.Element {
       docRef.current?.destroy()
       docRef.current = null
     }
+  }, [])
+
+  // Strg+Mausrad zoomt (wie in jedem PDF-Viewer).
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const onWheel = (e: WheelEvent): void => {
+      if (!e.ctrlKey) return
+      e.preventDefault()
+      const s = usePdfStore.getState()
+      s.setZoom(s.zoom * (e.deltaY < 0 ? 1.1 : 1 / 1.1))
+    }
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
   }, [])
 
   // Zoom einpassen (Seitenbreite / ganze Seite).
@@ -110,8 +123,36 @@ export default function PdfCanvas(): JSX.Element {
       ? 'flex flex-row flex-wrap content-start justify-center gap-3'
       : 'flex flex-col items-center'
 
+  // Hand-Werkzeug: Ziehen scrollt den Canvas (Panning).
+  const onPanDown = (e: ReactPointerEvent<HTMLDivElement>): void => {
+    if (tool !== 'hand' || e.button !== 0) return
+    const el = containerRef.current
+    if (!el) return
+    pan.current = { x: e.clientX, y: e.clientY, sl: el.scrollLeft, st: el.scrollTop }
+    el.setPointerCapture(e.pointerId)
+  }
+  const onPanMove = (e: ReactPointerEvent<HTMLDivElement>): void => {
+    const p = pan.current
+    const el = containerRef.current
+    if (!p || !el) return
+    el.scrollLeft = p.sl - (e.clientX - p.x)
+    el.scrollTop = p.st - (e.clientY - p.y)
+  }
+  const onPanUp = (e: ReactPointerEvent<HTMLDivElement>): void => {
+    pan.current = null
+    containerRef.current?.releasePointerCapture(e.pointerId)
+  }
+
   return (
-    <div ref={containerRef} className={`h-full w-full overflow-auto bg-canvas py-2 ${containerCls}`} data-testid="pdf-scroll">
+    <div
+      ref={containerRef}
+      className={`h-full w-full overflow-auto bg-canvas py-2 ${containerCls}`}
+      style={tool === 'hand' ? { cursor: pan.current ? 'grabbing' : 'grab' } : undefined}
+      onPointerDown={onPanDown}
+      onPointerMove={onPanMove}
+      onPointerUp={onPanUp}
+      data-testid="pdf-scroll"
+    >
       {doc && pageNumbers.map((n) => <PdfPage key={`p${n}-of${doc.numPages}`} pdf={doc} pageNumber={n} zoom={zoom} />)}
     </div>
   )

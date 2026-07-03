@@ -1,17 +1,7 @@
-import * as pdfjsLib from 'pdfjs-dist'
-import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url'
+import { pdfjs as pdfjsLib } from './pdfjs'
 import { usePdfStore } from '../state/store'
 import { flattenAnnotations } from './flatten'
-
-pdfjsLib.GlobalWorkerOptions.workerSrc = workerUrl
-
-function dataUrlToBytes(dataUrl: string): Uint8Array {
-  const base64 = dataUrl.slice(dataUrl.indexOf(',') + 1)
-  const bin = atob(base64)
-  const out = new Uint8Array(bin.length)
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i)
-  return out
-}
+import { dataUrlToBytes } from '../bytes'
 
 /** Rendert jede Seite (inkl. Annotationen) und speichert sie als PNG/JPG in einen Ordner. */
 export async function exportToImages(format: 'png' | 'jpeg', scale = 2): Promise<void> {

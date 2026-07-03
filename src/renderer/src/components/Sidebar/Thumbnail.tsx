@@ -16,8 +16,27 @@ export default function Thumbnail({ pdf, pageNumber, width }: Props): JSX.Elemen
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const renderRef = useRef<CancelableRender | null>(null)
   const [height, setHeight] = useState(0)
+  const [visible, setVisible] = useState(false)
+
+  // Erst rendern, wenn die Miniatur wirklich in den sichtbaren Bereich scrollt.
+  useEffect(() => {
+    const el = canvasRef.current
+    if (!el) return
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setVisible(true)
+          io.disconnect()
+        }
+      },
+      { rootMargin: '200px' }
+    )
+    io.observe(el)
+    return () => io.disconnect()
+  }, [])
 
   useEffect(() => {
+    if (!visible) return
     let cancelled = false
     void (async () => {
       const page = await pdf.getPage(pageNumber)
@@ -52,7 +71,7 @@ export default function Thumbnail({ pdf, pageNumber, width }: Props): JSX.Elemen
       cancelled = true
       renderRef.current?.cancel()
     }
-  }, [pdf, pageNumber, width])
+  }, [pdf, pageNumber, width, visible])
 
   return (
     <canvas

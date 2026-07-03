@@ -78,6 +78,15 @@ export default function App(): JSX.Element {
           e.preventDefault()
           store.redo()
         }
+      } else if (ctrl && (e.key === '+' || e.key === '=')) {
+        e.preventDefault()
+        store.zoomIn()
+      } else if (ctrl && e.key === '-') {
+        e.preventDefault()
+        store.zoomOut()
+      } else if (ctrl && e.key === '0') {
+        e.preventDefault()
+        store.resetZoom()
       } else if ((e.key === 'Delete' || e.key === 'Backspace') && !typing && store.selectedId) {
         e.preventDefault()
         store.removeAnnotation(store.selectedId)

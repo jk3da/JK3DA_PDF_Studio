@@ -30,7 +30,10 @@ export const MAX_ZOOM = 4
 export const HISTORY_LIMIT = 60
 
 const clampZoom = (z: number): number => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z))
-const clone = (a: Annotation[]): Annotation[] => JSON.parse(JSON.stringify(a)) as Annotation[]
+// Invariante: Annotationen werden nie in-place mutiert (update/move ersetzen
+// Objekte). Deshalb genügt für die History ein flacher Array-Snapshot —
+// deutlich billiger als ein Deep-Clone pro Aktion (bes. bei Freihand-Punkten).
+const clone = (a: Annotation[]): Annotation[] => a.slice()
 const genId = (): string =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto
     ? crypto.randomUUID()

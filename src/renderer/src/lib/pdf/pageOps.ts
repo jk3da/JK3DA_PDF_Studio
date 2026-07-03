@@ -1,31 +1,6 @@
 import { usePdfStore } from '../state/store'
-import { flattenAnnotations } from './flatten'
+import { currentFlatBytes, applyToDocument as apply } from './applyOp'
 import * as P from './pages'
-
-/**
- * Liefert die aktuellen Bytes; sind Annotationen vorhanden, werden sie zuerst
- * eingebacken, damit sie bei Seiten-Operationen an ihren Seiten bleiben.
- */
-async function currentFlatBytes(): Promise<Uint8Array | null> {
-  const { bytes, annotations } = usePdfStore.getState()
-  if (!bytes) return null
-  return annotations.length > 0 ? flattenAnnotations(bytes, annotations) : bytes
-}
-
-/** Führt eine in-place Seiten-Operation aus und lädt das Ergebnis. */
-async function apply(label: string, op: (bytes: Uint8Array) => Promise<Uint8Array>): Promise<void> {
-  const store = usePdfStore.getState()
-  const flat = await currentFlatBytes()
-  if (!flat) return
-  store.setStatus(`${label} …`)
-  try {
-    const out = await op(flat)
-    store.replaceBytes(out)
-    store.setStatus(`${label} ✓`)
-  } catch (e) {
-    store.setStatus(`Fehler: ${e instanceof Error ? e.message : String(e)}`)
-  }
-}
 
 export const pageOps = {
   rotate: (index: number, delta: number): Promise<void> =>

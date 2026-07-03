@@ -16,6 +16,17 @@ export default defineConfig({
         '@shared': resolve(__dirname, 'src/shared')
       }
     },
-    plugins: [react()]
+    plugins: [react()],
+    build: {
+      rollupOptions: {
+        output: {
+          // Große PDF-Engines getrennt vom App-Code (Startzeit + Caching).
+          manualChunks: {
+            pdfjs: ['pdfjs-dist'],
+            pdflib: ['pdf-lib']
+          }
+        }
+      }
+    }
   }
 })

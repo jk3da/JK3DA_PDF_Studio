@@ -128,7 +128,14 @@ export default function TitleBar({ onOpen }: { onOpen: () => void }): JSX.Elemen
   ]
 
   return (
-    <div ref={ref} className="app-drag flex h-9 shrink-0 items-center gap-3.5 border-b border-chrome-800 bg-chrome-900 px-2.5">
+    <div
+      ref={ref}
+      className="app-drag flex h-9 shrink-0 items-center gap-3.5 border-b border-chrome-800 bg-chrome-900 px-2.5"
+      onDoubleClick={(e) => {
+        // Doppelklick auf die freie Leiste maximiert (nicht auf Menüs/Buttons).
+        if (!(e.target as HTMLElement).closest('.app-no-drag')) void window.jk3da.winMaximizeToggle()
+      }}
+    >
       <div className="flex items-center gap-2 text-primary">
         <Icon name="app-logo" size={18} />
         <span className="text-ui font-semibold text-ink">JK3DA PDF&nbsp;Studio</span>
