@@ -11,6 +11,8 @@ import { openImagesAsPdf } from '../../lib/pdf/fromImages'
 import { compressDocument } from '../../lib/pdf/optimize'
 import { importOfficeAsPdf } from '../../lib/pdf/convert'
 import { runOcr } from '../../lib/pdf/ocr'
+import { printDocument } from '../../lib/pdf/print'
+import { loadRecents, openRecentFile } from '../../lib/recents'
 
 interface MItem {
   label?: string
@@ -47,8 +49,17 @@ export default function TitleBar({ onOpen }: { onOpen: () => void }): JSX.Elemen
       items: [
         { label: 'Öffnen…', icon: 'open', sc: 'Strg+O', onClick: onOpen },
         { label: 'Neu aus Bildern…', icon: 'new-from-images', onClick: () => void openImagesAsPdf() },
+        ...(loadRecents().length > 0
+          ? [
+              { divider: true } as MItem,
+              ...loadRecents()
+                .slice(0, 5)
+                .map((r): MItem => ({ label: r.name, icon: 'recent', onClick: () => void openRecentFile(r) })),
+              { divider: true } as MItem
+            ]
+          : []),
         { label: 'Speichern unter…', icon: 'save', sc: 'Strg+S', onClick: () => void saveCurrentDocument(), disabled: dis },
-        { label: 'Drucken…', icon: 'print', sc: 'Strg+P', onClick: () => window.print(), disabled: dis },
+        { label: 'Drucken…', icon: 'print', sc: 'Strg+P', onClick: () => void printDocument(), disabled: dis },
         { divider: true },
         { label: 'Export → PNG…', icon: 'export-image', onClick: () => void exportToImages('png'), disabled: dis },
         { label: 'Export → JPG…', icon: 'export-image', onClick: () => void exportToImages('jpeg'), disabled: dis },

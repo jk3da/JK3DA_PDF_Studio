@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, type DragEvent as ReactDragEvent } from 'react'
 import { Icon } from './components/ui/icons'
 import TitleBar from './components/shell/TitleBar'
 import TopToolbar from './components/shell/TopToolbar'
@@ -12,8 +12,11 @@ import { usePdfStore, type ToolId } from './lib/state/store'
 import { moveAnnotation } from './lib/annotations/types'
 import { createWelcomePdf } from './lib/pdf/sample'
 import { saveCurrentDocument } from './lib/pdf/save'
+import { printDocument } from './lib/pdf/print'
+import { createFromImages } from './lib/pdf/fromImages'
 import { applyRedactionToDoc } from './lib/pdf/redactApply'
 import { applyCropToDoc } from './lib/pdf/crop'
+import { loadRecents, addRecent, openRecentFile } from './lib/recents'
 import SignatureModal from './components/modals/SignatureModal'
 import FormsModal from './components/modals/FormsModal'
 import SecurityModal from './components/modals/SecurityModal'
@@ -65,9 +68,47 @@ export default function App(): JSX.Element {
   const handleOpen = useCallback(async () => {
     setStatus('Öffne Datei …')
     const result = await window.jk3da.openPdf()
-    if (result) setDocument(result.bytes, result.name, result.path)
-    else setStatus('Bereit')
+    if (result) {
+      setDocument(result.bytes, result.name, result.path)
+      addRecent(result.path, result.name)
+    } else setStatus('Bereit')
   }, [setDocument, setStatus])
+
+  // Von außen geöffnete Dateien (Doppelklick / zweite Instanz).
+  useEffect(() => {
+    return window.jk3da.onOpenFile((f) => {
+      usePdfStore.getState().setDocument(f.bytes, f.name, f.path)
+      addRecent(f.path, f.name)
+    })
+  }, [])
+
+  // Dirty-Zustand an den Main-Prozess melden (Schließen-Schutz).
+  const dirty = usePdfStore((s) => s.dirty)
+  useEffect(() => {
+    window.jk3da.setDirtyFlag(dirty)
+  }, [dirty])
+
+  // Drag & Drop: PDF öffnet, Bilder werden zu einem neuen PDF.
+  const handleDrop = useCallback(async (e: ReactDragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    const files = Array.from(e.dataTransfer.files)
+    const pdf = files.find((f) => f.name.toLowerCase().endsWith('.pdf'))
+    const store = usePdfStore.getState()
+    if (pdf) {
+      const buf = new Uint8Array(await pdf.arrayBuffer())
+      store.setDocument(buf, pdf.name)
+      return
+    }
+    const imgs = files.filter((f) => /\.(png|jpe?g)$/i.test(f.name))
+    if (imgs.length > 0) {
+      store.setStatus('Erzeuge PDF aus Bildern …')
+      const list = await Promise.all(
+        imgs.map(async (f) => ({ name: f.name, bytes: new Uint8Array(await f.arrayBuffer()) }))
+      )
+      store.setDocument(await createFromImages(list), 'Aus Bildern.pdf')
+      store.setStatus(`PDF aus ${list.length} Bild(ern) erstellt`)
+    }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -101,7 +142,7 @@ export default function App(): JSX.Element {
       // Datei / Bearbeiten
       if (ctrl && k === 'o') { e.preventDefault(); void handleOpen(); return }
       if (ctrl && k === 's') { e.preventDefault(); void saveCurrentDocument(); return }
-      if (ctrl && k === 'p') { e.preventDefault(); if (hasDocNow) window.print(); return }
+      if (ctrl && k === 'p') { e.preventDefault(); if (hasDocNow) void printDocument(); return }
       if (ctrl && k === 'w') {
         e.preventDefault()
         if (hasDocNow && (!store.dirty || window.confirm('Ungespeicherte Änderungen verwerfen und Dokument schließen?'))) {
@@ -204,7 +245,11 @@ export default function App(): JSX.Element {
   const showFormatBar = (tool !== 'select' && tool !== 'hand') || selectedId !== null
 
   return (
-    <div className="flex h-full w-full flex-col bg-chrome-900 font-sans text-ink">
+    <div
+      className="flex h-full w-full flex-col bg-chrome-900 font-sans text-ink"
+      onDragOver={(e) => e.preventDefault()}
+      onDrop={(e) => void handleDrop(e)}
+    >
       <TitleBar onOpen={handleOpen} />
       <TopToolbar onOpen={handleOpen} />
       {showFormatBar && <FormatBar />}
@@ -220,10 +265,27 @@ export default function App(): JSX.Element {
               <div className="flex flex-col items-center gap-2 rounded-panel border-2 border-dashed border-chrome-500 p-10 text-center">
                 <span className="grid h-14 w-14 place-items-center rounded-full bg-chrome-700 text-ink-muted"><Icon name="open" size={26} /></span>
                 <p className="text-ui-lg font-semibold text-ink">Kein Dokument geöffnet</p>
-                <p className="max-w-[36ch] text-ui text-ink-muted">Öffne eine PDF-Datei, um zu beginnen.</p>
+                <p className="max-w-[36ch] text-ui text-ink-muted">PDF hierher ziehen oder eine Datei öffnen.</p>
                 <button type="button" onClick={handleOpen} className="mt-1.5 inline-flex h-9 items-center gap-2 rounded-control bg-primary px-3.5 text-ui font-semibold text-white hover:bg-primary-hover">
                   <Icon name="open" size={16} /> Datei öffnen
                 </button>
+                {loadRecents().length > 0 && (
+                  <div className="mt-3 flex w-full flex-col gap-1 border-t border-chrome-600 pt-3">
+                    <span className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">Zuletzt verwendet</span>
+                    {loadRecents().slice(0, 5).map((r) => (
+                      <button
+                        key={r.path}
+                        type="button"
+                        onClick={() => void openRecentFile(r)}
+                        title={r.path}
+                        className="flex items-center gap-2 rounded-control px-2 py-1.5 text-ui text-[#c8ccd2] hover:bg-chrome-700"
+                      >
+                        <Icon name="recent" size={15} />
+                        <span className="truncate">{r.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

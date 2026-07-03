@@ -21,6 +21,23 @@ import {
 const api = {
   /** Öffnet den nativen "PDF öffnen"-Dialog im Main-Prozess. */
   openPdf: (): Promise<OpenedPdf | null> => ipcRenderer.invoke(IPC.openPdf),
+  /** Lädt eine PDF direkt von einem Pfad (Zuletzt verwendet). */
+  openPdfPath: (path: string): Promise<OpenedPdf | null> =>
+    ipcRenderer.invoke(IPC.openPdfPath, path),
+  /** Abo für "Datei von außen geöffnet" (Doppelklick / zweite Instanz). */
+  onOpenFile: (cb: (f: OpenedPdf) => void): (() => void) => {
+    const handler = (_e: unknown, f: OpenedPdf): void => cb(f)
+    ipcRenderer.on(IPC.openFileEvent, handler)
+    return () => {
+      ipcRenderer.removeListener(IPC.openFileEvent, handler)
+    }
+  },
+  /** Meldet ungespeicherte Änderungen an den Main-Prozess (Schließen-Schutz). */
+  setDirtyFlag: (d: boolean): void => {
+    ipcRenderer.send(IPC.setDirty, d)
+  },
+  /** Druckt fertiges HTML über ein unsichtbares Fenster + System-Dialog. */
+  printHtml: (html: string): Promise<boolean> => ipcRenderer.invoke(IPC.printHtml, html),
   /** Öffnet einen Mehrfach-Dialog für Bilder (PNG/JPG). */
   openImages: (): Promise<ImageInput[] | null> => ipcRenderer.invoke(IPC.openImages),
   /** Öffnet "Speichern unter" und schreibt die Bytes auf die Platte. */

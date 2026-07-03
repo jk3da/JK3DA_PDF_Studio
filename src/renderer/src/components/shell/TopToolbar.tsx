@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Icon } from '../ui/icons'
 import { usePdfStore, type LayoutMode } from '../../lib/state/store'
 import { saveCurrentDocument } from '../../lib/pdf/save'
+import { printDocument } from '../../lib/pdf/print'
 import SearchBox from './SearchBox'
 
 const iconBtn =
@@ -50,7 +51,7 @@ export default function TopToolbar({ onOpen }: { onOpen: () => void }): JSX.Elem
       <button type="button" onClick={() => void saveCurrentDocument()} disabled={!hasDoc} title="Speichern unter  Strg+S" className={iconBtn}>
         <Icon name="save" />
       </button>
-      <button type="button" onClick={() => window.print()} disabled={!hasDoc} title="Drucken" className={iconBtn}>
+      <button type="button" onClick={() => void printDocument()} disabled={!hasDoc} title="Drucken (Strg+P)" className={iconBtn}>
         <Icon name="print" />
       </button>
 

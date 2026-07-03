@@ -65,6 +65,10 @@ interface PdfState {
   currentStrokeWidth: number
   currentOpacity: number
   currentFontSize: number
+  /** Text neuer Stempel (Vorlage oder frei). */
+  stampLabel: string
+  /** Aktuelles Datum an neue Stempel anhängen. */
+  stampWithDate: boolean
   past: Annotation[][]
   future: Annotation[][]
   /** Wartet auf Platzierung per Klick (z. B. Signatur/Bild). */
@@ -118,6 +122,8 @@ interface PdfState {
   setCurrentStrokeWidth: (n: number) => void
   setCurrentOpacity: (n: number) => void
   setCurrentFontSize: (n: number) => void
+  setStampLabel: (s: string) => void
+  setStampWithDate: (v: boolean) => void
   setLeftTab: (t: LeftTab) => void
   setRightTab: (t: RightTab) => void
   setLayoutMode: (m: LayoutMode) => void
@@ -145,6 +151,8 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   currentStrokeWidth: 2,
   currentOpacity: 1,
   currentFontSize: 16,
+  stampLabel: 'GENEHMIGT',
+  stampWithDate: false,
   past: [],
   future: [],
   pending: null,
@@ -334,6 +342,8 @@ export const usePdfStore = create<PdfState>((set, get) => ({
   setCurrentStrokeWidth: (n) => set({ currentStrokeWidth: n }),
   setCurrentOpacity: (n) => set({ currentOpacity: Math.min(1, Math.max(0, n)) }),
   setCurrentFontSize: (n) => set({ currentFontSize: n }),
+  setStampLabel: (s) => set({ stampLabel: s }),
+  setStampWithDate: (v) => set({ stampWithDate: v }),
   setLeftTab: (t) => set({ leftTab: t }),
   setRightTab: (t) => set({ rightTab: t }),
   setLayoutMode: (m) => set({ layoutMode: m }),

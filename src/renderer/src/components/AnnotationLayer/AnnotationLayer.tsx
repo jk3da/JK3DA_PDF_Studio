@@ -144,8 +144,13 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
     return null
   }
 
+  const stampText = (): string => {
+    const s = usePdfStore.getState()
+    return s.stampWithDate ? `${s.stampLabel} · ${new Date().toLocaleDateString('de-DE')}` : s.stampLabel
+  }
+
   const makeShape = (bx: number, by: number, bw: number, bh: number): Annotation => {
-    if (tool === 'stamp') return { id: 'draft', page: pageNumber, type: 'stamp', x: bx, y: by, w: bw, h: bh, label: 'GENEHMIGT', color }
+    if (tool === 'stamp') return { id: 'draft', page: pageNumber, type: 'stamp', x: bx, y: by, w: bw, h: bh, label: stampText(), color }
     if (tool === 'ellipse') return { id: 'draft', page: pageNumber, type: 'ellipse', x: bx, y: by, w: bw, h: bh, color, strokeWidth: strokeW, opacity }
     if (tool === 'highlight') return { id: 'draft', page: pageNumber, type: 'highlight', x: bx, y: by, w: bw, h: bh, color: HIGHLIGHT_COLOR, strokeWidth: strokeW, opacity: 0.35 }
     if (tool === 'redact') return { id: 'draft', page: pageNumber, type: 'redact', x: bx, y: by, w: bw, h: bh, color: '#111111', strokeWidth: strokeW }
@@ -258,7 +263,7 @@ export default function AnnotationLayer({ pageNumber, baseWidth, zoom }: Props):
       let bw = Math.abs(x - g.startX)
       let bh = Math.abs(y - g.startY)
       if (tool === 'stamp' && bw < 8) {
-        bw = 130
+        bw = Math.max(120, stampText().length * 8.5 + 24)
         bh = 38
         bx = g.startX
         by = g.startY

@@ -61,6 +61,10 @@ export type OcrResult = { ok: true; pages: Uint8Array[] } | { ok: false; error: 
 /** IPC-Kanalnamen zentral, damit Main und Preload sich nicht vertippen. */
 export const IPC = {
   openPdf: 'dialog:openPdf',
+  openPdfPath: 'file:openPdfPath',
+  openFileEvent: 'app:openFile',
+  printHtml: 'app:printHtml',
+  setDirty: 'app:setDirty',
   openImages: 'dialog:openImages',
   savePdf: 'dialog:savePdf',
   savePdfBatch: 'dialog:savePdfBatch',

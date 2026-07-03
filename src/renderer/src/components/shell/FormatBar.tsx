@@ -5,6 +5,7 @@ import { usePdfStore } from '../../lib/state/store'
 const SWATCHES = ['#e11d2a', '#f59e0b', '#ffd400', '#15a34a', '#3b82f6', '#7c3aed', '#1b1f24', '#ffffff']
 const WIDTHS = [1, 2, 3, 5, 8]
 const SIZES = [10, 12, 14, 16, 20, 28]
+const STAMP_PRESETS = ['GENEHMIGT', 'ABGELEHNT', 'ENTWURF', 'VERTRAULICH', 'BEZAHLT', 'ERLEDIGT', 'KOPIE']
 
 export default function FormatBar(): JSX.Element {
   const color = usePdfStore((s) => s.currentColor)
@@ -16,6 +17,12 @@ export default function FormatBar(): JSX.Element {
   const fontSize = usePdfStore((s) => s.currentFontSize)
   const setFontSize = usePdfStore((s) => s.setCurrentFontSize)
   const selectedId = usePdfStore((s) => s.selectedId)
+  const tool = usePdfStore((s) => s.tool)
+  const stampLabel = usePdfStore((s) => s.stampLabel)
+  const setStampLabel = usePdfStore((s) => s.setStampLabel)
+  const stampWithDate = usePdfStore((s) => s.stampWithDate)
+  const setStampWithDate = usePdfStore((s) => s.setStampWithDate)
+  const selAnno = usePdfStore((s) => s.annotations.find((a) => a.id === s.selectedId))
   const updateAnnotation = usePdfStore((s) => s.updateAnnotation)
   const removeAnnotation = usePdfStore((s) => s.removeAnnotation)
   const duplicateAnnotation = usePdfStore((s) => s.duplicateAnnotation)
@@ -43,10 +50,45 @@ export default function FormatBar(): JSX.Element {
   }
 
   const hasSel = selectedId !== null
+  const stampCtx = tool === 'stamp' || selAnno?.type === 'stamp'
+
+  const applyStampLabel = (v: string): void => {
+    setStampLabel(v)
+    if (selAnno?.type === 'stamp') updateAnnotation(selAnno.id, { label: v })
+  }
 
   return (
     <div className="flex h-[42px] shrink-0 items-center gap-1.5 overflow-hidden border-b border-chrome-900 bg-chrome-700 px-2">
       <span className="pr-0.5 text-ui-sm font-semibold text-ink-muted">FORMAT</span>
+
+      {stampCtx && (
+        <>
+          <span className="text-ink"><Icon name="stamp" size={17} /></span>
+          <select
+            value={STAMP_PRESETS.includes(selAnno?.type === 'stamp' ? selAnno.label : stampLabel) ? (selAnno?.type === 'stamp' ? selAnno.label : stampLabel) : '__custom'}
+            onChange={(e) => {
+              if (e.target.value !== '__custom') applyStampLabel(e.target.value)
+            }}
+            className="h-7 rounded-control border border-chrome-600 bg-chrome-800 px-1.5 text-ui-sm text-ink outline-none"
+          >
+            {STAMP_PRESETS.map((p) => (
+              <option key={p} value={p}>{p}</option>
+            ))}
+            <option value="__custom">Eigener Text…</option>
+          </select>
+          <input
+            value={selAnno?.type === 'stamp' ? selAnno.label : stampLabel}
+            onChange={(e) => applyStampLabel(e.target.value)}
+            placeholder="Stempeltext"
+            className="h-7 w-[150px] rounded-control border border-chrome-600 bg-chrome-800 px-2 text-ui-sm text-ink outline-none focus:border-primary"
+          />
+          <label className="flex items-center gap-1.5 text-ui-sm text-[#c8ccd2]">
+            <input type="checkbox" checked={stampWithDate} onChange={(e) => setStampWithDate(e.target.checked)} className="h-3.5 w-3.5 accent-primary" />
+            Datum
+          </label>
+          <Divider />
+        </>
+      )}
 
       <span title="Füllfarbe" className="text-ink"><Icon name="fill-color" size={17} /></span>
       <Popover

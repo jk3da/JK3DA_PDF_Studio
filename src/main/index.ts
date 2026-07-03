@@ -21,6 +21,31 @@ import { toolAvailable, runBinary } from './sidecars'
 
 const isDev = !!process.env['ELECTRON_RENDERER_URL']
 
+let mainWindow: BrowserWindow | null = null
+/** Ungespeicherte Änderungen? Wird vom Renderer gemeldet (app:setDirty). */
+let rendererDirty = false
+
+/** Liest eine PDF und schiebt sie als Open-Event in den Renderer. */
+async function openPathInWindow(win: BrowserWindow, filePath: string): Promise<void> {
+  try {
+    const data = await readFile(filePath)
+    const payload: OpenedPdf = {
+      path: filePath,
+      name: basename(filePath),
+      bytes: new Uint8Array(data)
+    }
+    win.webContents.send(IPC.openFileEvent, payload)
+  } catch {
+    /* Datei nicht lesbar — ignorieren */
+  }
+}
+
+/** PDF-Pfad aus Startargumenten (Doppelklick / "Öffnen mit"). */
+function pdfArgFrom(argv: string[]): string | null {
+  const args = argv.slice(app.isPackaged ? 1 : 2)
+  return args.find((a) => a.toLowerCase().endsWith('.pdf') && existsSync(a)) ?? null
+}
+
 function createWindow(): void {
   const window = new BrowserWindow({
     width: 1320,
@@ -40,7 +65,27 @@ function createWindow(): void {
     }
   })
 
+  mainWindow = window
   window.on('ready-to-show', () => window.show())
+  window.on('closed', () => {
+    if (mainWindow === window) mainWindow = null
+  })
+
+  // Verlustfrei: Schließen mit ungespeicherten Änderungen erst bestätigen.
+  window.on('close', (e) => {
+    if (!rendererDirty) return
+    const choice = dialog.showMessageBoxSync(window, {
+      type: 'warning',
+      buttons: ['Schließen ohne Speichern', 'Abbrechen'],
+      defaultId: 1,
+      cancelId: 1,
+      title: 'Ungespeicherte Änderungen',
+      message: 'Das Dokument hat ungespeicherte Änderungen.',
+      detail: 'Beim Schließen gehen die Änderungen verloren.'
+    })
+    if (choice === 1) e.preventDefault()
+    else rendererDirty = false
+  })
 
   // Offline-first: externe Links niemals im App-Fenster, gar nicht ohne Not.
   window.webContents.setWindowOpenHandler(({ url }) => {
@@ -92,6 +137,43 @@ function registerIpc(): void {
       path: filePath,
       name: basename(filePath),
       bytes: new Uint8Array(data)
+    }
+  })
+
+  // Renderer meldet den Dirty-Zustand (für den Schließen-Schutz).
+  ipcMain.on(IPC.setDirty, (_e, d: boolean) => {
+    rendererDirty = d
+  })
+
+  // PDF direkt von einem Pfad laden (Zuletzt verwendet).
+  ipcMain.handle(IPC.openPdfPath, async (_e, filePath: string): Promise<OpenedPdf | null> => {
+    try {
+      if (!existsSync(filePath)) return null
+      const data = await readFile(filePath)
+      return { path: filePath, name: basename(filePath), bytes: new Uint8Array(data) }
+    } catch {
+      return null
+    }
+  })
+
+  // Druck: fertiges HTML (Seiten-Bilder) in unsichtbarem Fenster + System-Dialog.
+  ipcMain.handle(IPC.printHtml, async (_e, html: string): Promise<boolean> => {
+    const tmp = join(tmpdir(), `jk3da-print-${Date.now()}-${Math.floor(Math.random() * 1e6)}.html`)
+    const w = new BrowserWindow({ show: false })
+    try {
+      await writeFile(tmp, html, 'utf8')
+      await w.loadFile(tmp)
+      return await new Promise<boolean>((resolve) => {
+        w.webContents.print({ silent: false, printBackground: true }, (ok) => {
+          resolve(ok)
+          w.destroy()
+          void rm(tmp, { force: true }).catch(() => undefined)
+        })
+      })
+    } catch {
+      w.destroy()
+      await rm(tmp, { force: true }).catch(() => undefined)
+      return false
     }
   })
 
@@ -262,14 +344,35 @@ function registerIpc(): void {
   })
 }
 
-app.whenReady().then(() => {
-  registerIpc()
-  createWindow()
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+// Eine Instanz: Doppelklick auf eine weitere PDF landet im offenen Fenster.
+const gotLock = app.requestSingleInstanceLock()
+if (!gotLock) {
+  app.quit()
+} else {
+  app.on('second-instance', (_e, argv) => {
+    if (!mainWindow) return
+    if (mainWindow.isMinimized()) mainWindow.restore()
+    mainWindow.focus()
+    const p = pdfArgFrom(argv)
+    if (p) void openPathInWindow(mainWindow, p)
   })
-})
+
+  app.whenReady().then(() => {
+    registerIpc()
+    createWindow()
+
+    // "Öffnen mit" / Doppelklick: Pfad aus den Startargumenten laden.
+    const startupPdf = pdfArgFrom(process.argv)
+    if (startupPdf && mainWindow) {
+      const win = mainWindow
+      win.webContents.once('did-finish-load', () => void openPathInWindow(win, startupPdf))
+    }
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    })
+  })
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit()
