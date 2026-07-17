@@ -5,6 +5,8 @@
 
 Kein Abo, keine Cloud, kein Konto, keine Telemetrie. Alles läuft lokal auf deinem Rechner.
 
+![JK3DA PDF Studio](docs/screenshot.png)
+
 ---
 
 ## Features
