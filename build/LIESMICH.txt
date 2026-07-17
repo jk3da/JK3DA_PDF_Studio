@@ -57,7 +57,7 @@ Tipps
   App funktioniert auch ohne sie vollständig.
 
 Quellcode, Updates & Fehlermeldungen:
-  https://github.com/jk3da/jk3da-pdf-studio
+  https://github.com/jk3da/JK3DA_PDF_Studio
 
 Lizenz: MIT (Open Source)
 
