@@ -1,0 +1,59 @@
+============================================================
+ JK3DA PDF Studio 1.0
+ Kostenloser PDF-Editor — komplett offline
+============================================================
+
+Was ist das?
+------------
+Ein vollwertiger PDF-Editor für Windows:
+  • PDFs ansehen, durchsuchen, drucken
+  • Anmerkungen: Text, Markieren, Formen, Pfeile, Freihand, Notizen
+  • Stempel (GENEHMIGT, BEZAHLT, ... auch mit Datum), Unterschriften
+  • Seiten drehen, löschen, verschieben, zusammenführen, aufteilen
+  • Formulare ausfüllen, Text schwärzen (echtes Schwärzen!),
+    Wasserzeichen, Passwortschutz*, PDF aus Bildern u.v.m.
+
+Die App läuft zu 100 % offline: keine Cloud, kein Konto, keine
+Werbung, keine Telemetrie. Es werden keine Daten gesendet.
+
+Welche Datei nehme ich?
+-----------------------
+  Ordner "Installation":
+     JK3DA PDF Studio-1.0.0-Setup.exe
+     → Normale Installation. Danach findest du die App im Startmenü
+       und kannst PDFs per Rechtsklick → "Öffnen mit" öffnen.
+
+  Ordner "Portable":
+     JK3DA PDF Studio-1.0.0-Portable.exe
+     → Keine Installation nötig. Einfach doppelklicken — läuft auch
+       vom USB-Stick. (Erster Start dauert einen Moment.)
+
+Windows-Warnung beim ersten Start ("SmartScreen")
+-------------------------------------------------
+Beim ersten Start kann Windows melden:
+  "Der Computer wurde durch Windows geschützt" /
+  "Unbekannter Herausgeber"
+
+Das ist normal bei kostenloser Software ohne teures Firmen-
+Zertifikat und bedeutet NICHT, dass etwas schädlich ist — nur,
+dass Microsoft den Herausgeber nicht kennt.
+
+So startest du trotzdem:
+  1. Im Warnfenster auf "Weitere Informationen" klicken
+  2. Dann auf "Trotzdem ausführen"
+
+Wer auf Nummer sicher gehen will, kann die Datei vorher auf
+https://www.virustotal.com hochladen und prüfen lassen.
+
+Tipps
+-----
+  • Hilfe → Tastenkürzel zeigt alle Shortcuts (Strg+Mausrad = Zoom,
+    Leertaste halten = Verschieben, V/H/T/... = Werkzeuge)
+  • PDFs kannst du auch einfach ins Fenster ziehen
+  • "Speichern unter" überschreibt nie dein Original
+
+* Passwortschutz/Verschlüsselung, OCR und Office-Import benötigen
+  kostenlose Zusatzprogramme (qpdf, Tesseract, LibreOffice) — die
+  App funktioniert auch ohne sie vollständig.
+
+Viel Spaß!
