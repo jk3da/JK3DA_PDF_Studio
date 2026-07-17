@@ -1,13 +1,12 @@
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
 /**
- * Erzeugt ein kleines Willkommens-PDF rein in JS (pdf-lib).
- * Dient in Phase 0 als sofort sichtbarer Render-Test und beweist,
- * dass der pdf-lib-Stack im Renderer läuft.
+ * Erzeugt das Willkommens-PDF, das beim Start angezeigt wird —
+ * kurzer Schnellstart für neue Nutzer, komplett lokal erzeugt (pdf-lib).
  */
 export async function createWelcomePdf(): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
-  doc.setTitle('JK3DA PDF Studio — Willkommen')
+  doc.setTitle('Willkommen — JK3DA PDF Studio')
   doc.setProducer('JK3DA PDF Studio')
 
   const bold = await doc.embedFont(StandardFonts.HelveticaBold)
@@ -22,8 +21,8 @@ export async function createWelcomePdf(): Promise<Uint8Array> {
 
   page.drawRectangle({ x: 0, y: height - 8, width: 595.28, height: 8, color: blue })
 
-  page.drawText('JK3DA PDF Studio', { x: 56, y: height - 110, size: 34, font: bold, color: ink })
-  page.drawText('Phase 0 — Scaffold läuft.', {
+  page.drawText('Willkommen!', { x: 56, y: height - 110, size: 34, font: bold, color: ink })
+  page.drawText('JK3DA PDF Studio — dein PDF-Editor. Komplett offline.', {
     x: 56,
     y: height - 144,
     size: 15,
@@ -31,17 +30,35 @@ export async function createWelcomePdf(): Promise<Uint8Array> {
     color: muted
   })
 
-  const lines = [
-    'Electron + Vite + React + TypeScript steht.',
-    'pdf.js rendert dieses Dokument (gerade jetzt).',
-    'pdf-lib hat dieses Dokument im Browser erzeugt.',
-    'IPC-Bruecke Renderer <-> Main ist verbunden ("PDF oeffnen").',
-    '',
-    'Naechster Schritt: Annotationen via pdf-lib echt ins PDF schreiben (Phase 1).'
-  ]
-  lines.forEach((line, i) => {
-    page.drawText(line, { x: 56, y: height - 200 - i * 26, size: 13, font: regular, color: ink })
-  })
+  let y = height - 205
+  const section = (title: string, lines: string[]): void => {
+    page.drawText(title, { x: 56, y, size: 14, font: bold, color: ink })
+    y -= 24
+    for (const line of lines) {
+      page.drawText(line, { x: 70, y, size: 12, font: regular, color: ink })
+      y -= 20
+    }
+    y -= 14
+  }
+
+  section('So startest du', [
+    'Eigene PDF oeffnen: Strg+O — oder die Datei einfach ins Fenster ziehen.',
+    'Links findest du alle Werkzeuge: Text, Markieren, Formen, Stempel u. v. m.',
+    'Aenderungen sichern mit Strg+S ("Speichern unter" — dein Original bleibt unberuehrt).'
+  ])
+
+  section('Praktisch zu wissen', [
+    'Strg+Mausrad zoomt, die Leertaste gedrueckt halten verschiebt die Ansicht.',
+    'Rechtsklick auf eine Anmerkung oeffnet das Kontextmenue.',
+    'Alle Tastenkuerzel: Menue "Hilfe" -> "Tastenkuerzel".'
+  ])
+
+  section('Deine Daten bleiben bei dir', [
+    'Diese App stellt keinerlei Netzwerkverbindungen her.',
+    'Kein Konto, keine Cloud, keine Telemetrie.'
+  ])
+
+  page.drawText('Viel Spass!', { x: 56, y: y - 6, size: 13, font: bold, color: blue })
 
   return doc.save()
 }
