@@ -9,22 +9,22 @@ Kein Abo, keine Cloud, kein Konto, keine Telemetrie. Alles läuft lokal auf dein
 
 ## Features
 
-- 📄 **Ansehen & Navigieren** — schnelles Rendering, Zoom (Strg+Mausrad), Einzelseite/Fortlaufend/Doppelseite, Volltextsuche, Lesezeichen, Text markieren & kopieren
-- ✏️ **Anmerkungen** — Text, Markieren, Unterstreichen, Durchstreichen, Freihand, Linien, Pfeile, Rechtecke, Ellipsen, Notizen — mit Resize-Griffen, Kontextmenü, Undo/Redo
-- 🖊️ **Unterschriften** — zeichnen, speichern, per Vorschau exakt platzieren
-- 📋 **Stempel** — GENEHMIGT, BEZAHLT, ENTWURF … oder eigener Text, optional mit Datum
-- 🗂️ **Seiten organisieren** — drehen, löschen, duplizieren, verschieben (Drag & Drop), zusammenführen, aufteilen, extrahieren, zuschneiden
-- 📝 **Formulare** — Felder erkennen und ausfüllen, festschreiben (flatten)
-- ⬛ **Echtes Schwärzen** — Inhalte werden wirklich entfernt, nicht nur überdeckt
-- 📐 **Messen** — Distanz, Fläche und Umfang in mm
-- 🖼️ **Konvertieren** — PDF ↔ Bilder (PNG/JPG), PDF aus Bildern erstellen
-- 💧 **Dokument-Werkzeuge** — Wasserzeichen, Kopf-/Fußzeilen, Seitenzahlen, Metadaten bearbeiten/entfernen
-- 🖨️ **Drucken** — sauber über den System-Druckdialog
-- ⌨️ **Industrie-Standard-Bedienung** — Acrobat-Tastenkürzel (Hilfe → Tastenkürzel), Drag & Drop, „Öffnen mit"-Integration
+- **Ansehen & Navigieren** — schnelles Rendering, Zoom (Strg+Mausrad), Einzelseite/Fortlaufend/Doppelseite, Volltextsuche, Lesezeichen, Text markieren & kopieren
+- **Anmerkungen** — Text, Markieren, Unterstreichen, Durchstreichen, Freihand, Linien, Pfeile, Rechtecke, Ellipsen, Notizen — mit Resize-Griffen, Kontextmenü, Undo/Redo
+- **Unterschriften** — zeichnen, speichern, per Vorschau exakt platzieren
+- **Stempel** — GENEHMIGT, BEZAHLT, ENTWURF oder eigener Text, optional mit Datum
+- **Seiten organisieren** — drehen, löschen, duplizieren, verschieben (Drag & Drop), zusammenführen, aufteilen, extrahieren, zuschneiden
+- **Formulare** — Felder erkennen und ausfüllen, festschreiben (flatten)
+- **Echtes Schwärzen** — Inhalte werden wirklich entfernt, nicht nur überdeckt
+- **Messen** — Distanz, Fläche und Umfang in mm
+- **Konvertieren** — PDF zu Bildern (PNG/JPG), PDF aus Bildern erstellen
+- **Dokument-Werkzeuge** — Wasserzeichen, Kopf-/Fußzeilen, Seitenzahlen, Metadaten bearbeiten/entfernen
+- **Drucken** — sauber über den System-Druckdialog
+- **Gewohnte Bedienung** — Acrobat-Tastenkürzel (Hilfe → Tastenkürzel), Drag & Drop, „Öffnen mit"-Integration
 
 ## Download
 
-➡️ **[Neueste Version unter Releases](../../releases/latest)**
+**[Neueste Version unter Releases](../../releases/latest)**
 
 | Datei | Zweck |
 |---|---|
@@ -36,6 +36,12 @@ Kein Abo, keine Cloud, kein Konto, keine Telemetrie. Alles läuft lokal auf dein
 > laufend Geld). Das ist bei kostenloser Open-Source-Software üblich —
 > *Weitere Informationen → Trotzdem ausführen*. Der komplette Quellcode liegt offen
 > in diesem Repository; die App macht keinerlei Netzwerkzugriffe.
+
+## Transparenz
+
+Diese App wurde mit **Claude** (KI-Assistent von Anthropic) entwickelt — unter Anleitung,
+Prüfung und Aufsicht von JK3DA. Der gesamte Quellcode ist hier offen einsehbar, inklusive
+der vollständigen Commit-Historie und einer Unit-Test-Suite.
 
 ## Optionale Zusatzfunktionen
 
@@ -58,7 +64,7 @@ npm run package:win  # Setup- + Portable-exe nach release/
 
 ## Datenschutz
 
-Die App stellt **keine Netzwerkverbindungen** her. Keine Telemetrie, keine Updates-Pings,
+Die App stellt **keine Netzwerkverbindungen** her. Keine Telemetrie, keine Update-Pings,
 keine Cloud. Was du bearbeitest, bleibt auf deinem Rechner.
 
 ## Lizenz
