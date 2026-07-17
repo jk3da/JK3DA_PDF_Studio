@@ -56,4 +56,9 @@ Tipps
   kostenlose Zusatzprogramme (qpdf, Tesseract, LibreOffice) — die
   App funktioniert auch ohne sie vollständig.
 
+Quellcode, Updates & Fehlermeldungen:
+  https://github.com/jk3da/jk3da-pdf-studio
+
+Lizenz: MIT (Open Source)
+
 Viel Spaß!

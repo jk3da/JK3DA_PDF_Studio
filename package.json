@@ -1,9 +1,14 @@
 {
   "name": "jk3da-pdf-studio",
   "version": "1.0.0",
-  "description": "Offline, kostenlose PDF-Desktop-App (JK3DA PDF Studio)",
+  "description": "Kostenloser PDF-Editor für Windows — komplett offline (Free offline PDF editor)",
   "author": "JK3DA",
-  "license": "UNLICENSED",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jk3da/jk3da-pdf-studio.git"
+  },
+  "homepage": "https://github.com/jk3da/jk3da-pdf-studio",
   "private": true,
   "main": "./out/main/index.js",
   "scripts": {
