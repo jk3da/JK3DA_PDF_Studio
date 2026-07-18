@@ -20,6 +20,7 @@
     "typecheck": "npm run typecheck:node && npm run typecheck:web",
     "test": "vitest run",
     "test:watch": "vitest",
+    "make-icon": "node scripts/make-icon.mjs",
     "package:win": "electron-vite build && electron-builder --win"
   },
   "dependencies": {
@@ -39,7 +40,9 @@
     "electron": "^33.2.0",
     "electron-builder": "^25.1.8",
     "electron-vite": "^2.3.0",
+    "png-to-ico": "^3.0.2",
     "postcss": "^8.4.47",
+    "sharp": "^0.35.3",
     "tailwindcss": "^3.4.14",
     "typescript": "^5.6.2",
     "vite": "^5.4.8",
